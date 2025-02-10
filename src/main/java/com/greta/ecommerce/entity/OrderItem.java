@@ -1,5 +1,5 @@
 // OrderItem.java
-package com.greta.ecommerce.entities;
+package com.greta.ecommerce.entity;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
