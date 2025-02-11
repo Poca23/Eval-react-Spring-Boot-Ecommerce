@@ -12,13 +12,8 @@ public class Order {
     @NotNull(message = "L'email est obligatoire")
     @Email(message = "Format d'email invalide")
     private String email;
-
-    @NotNull(message = "La date est obligatoire")
-    private LocalDateTime date;
-
-    @NotNull(message = "Le status est obligatoire")
-    private String status;
-
+    private LocalDateTime date; // Géré par le service
+    private String status; // Géré par le service
     private List<OrderItem> items;
 
     // Constructeur par défaut
