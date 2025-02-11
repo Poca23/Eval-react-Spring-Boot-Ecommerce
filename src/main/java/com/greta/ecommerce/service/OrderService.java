@@ -11,6 +11,7 @@ import com.greta.ecommerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -18,7 +19,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
-    private final ProductRepository productRepository; // Pour gérer les stocks
+    private final ProductRepository productRepository;
 
     public OrderService(OrderRepository orderRepository,
                         OrderItemRepository orderItemRepository,
@@ -54,7 +55,16 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(Order order) {
-        // Vérification des stocks avant de créer la commande
+        // Validation des données de base
+        if (order.getEmail() == null || order.getItems() == null || order.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Order must have an email and items");
+        }
+
+        // Initialisation des données par défaut
+        order.setDate(LocalDateTime.now());
+        order.setStatus("PENDING");
+
+        // Vérification des stocks
         for (OrderItem item : order.getItems()) {
             Product product = productRepository.findById(item.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + item.getProductId()));
@@ -64,16 +74,53 @@ public class OrderService {
             }
         }
 
-        // Création de la commande
-        Order savedOrder = orderRepository.save(order);
+        // Sauvegarde de la commande
+        orderRepository.save(order);
 
         // Mise à jour des stocks et sauvegarde des items
         for (OrderItem item : order.getItems()) {
-            item.setOrderId(savedOrder.getId());
-            productRepository.updateStock(item.getProductId(), -item.getQuantity());
-        }
-        orderItemRepository.saveAll(order.getItems());
+            // Mise à jour du stock
+            Product product = productRepository.findById(item.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + item.getProductId()));
+            productRepository.updateStock(product.getId(), product.getStock() - item.getQuantity());
 
-        return savedOrder;
+            // Sauvegarde de l'item
+            item.setOrderId(order.getId());
+            orderItemRepository.save(item);
+        }
+
+        return order;
+    }
+
+    @Transactional
+    public Order updateOrderStatus(Long orderId, String newStatus) {
+        Order order = getOrderById(orderId);
+        order.setStatus(newStatus);
+        orderRepository.save(order);
+        return order;
+    }
+
+    public List<Order> getOrdersByStatus(String status) {
+        return orderRepository.findByStatus(status);
+    }
+
+    @Transactional
+    public void cancelOrder(Long orderId) {
+        Order order = getOrderById(orderId);
+
+        // On ne peut annuler que les commandes en attente
+        if (!"PENDING".equals(order.getStatus())) {
+            throw new IllegalStateException("Can only cancel pending orders");
+        }
+
+        // Remise en stock des produits
+        for (OrderItem item : order.getItems()) {
+            Product product = productRepository.findById(item.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + item.getProductId()));
+            productRepository.updateStock(product.getId(), product.getStock() + item.getQuantity());
+        }
+
+        order.setStatus("CANCELLED");
+        orderRepository.save(order);
     }
 }

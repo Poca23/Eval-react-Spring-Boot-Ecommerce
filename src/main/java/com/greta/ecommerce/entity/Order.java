@@ -1,9 +1,7 @@
-// Order.java
 package com.greta.ecommerce.entity;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,28 +11,30 @@ public class Order {
 
     @NotNull(message = "L'email est obligatoire")
     @Email(message = "Format d'email invalide")
-    private String customerEmail;
+    private String email;
 
-    @NotNull(message = "La date de commande est obligatoire")
-    private LocalDateTime orderDate;
+    @NotNull(message = "La date est obligatoire")
+    private LocalDateTime date;
+
+    @NotNull(message = "Le status est obligatoire")
+    private String status;
 
     private List<OrderItem> items;
-
-    @NotNull(message = "Le montant total est obligatoire")
-    @Positive(message = "Le montant total doit être positif")
-    private Double totalAmount;
 
     // Constructeur par défaut
     public Order() {
     }
 
     // Constructeur avec tous les champs
-    public Order(Long id, String customerEmail, LocalDateTime orderDate, List<OrderItem> items, Double totalAmount) {
+    public Order(Long id, String email, LocalDateTime date, String status, List<OrderItem> items) {
         this.id = id;
-        this.customerEmail = customerEmail;
-        this.orderDate = orderDate;
+        this.email = email;
+        this.date = date;
+        this.status = status;
         this.items = items;
-        this.totalAmount = totalAmount;
+    }
+
+    public Order(long id, String customerEmail, LocalDateTime orderDate, String status, double totalAmount) {
     }
 
     // Getters et Setters
@@ -46,20 +46,28 @@ public class Order {
         this.id = id;
     }
 
-    public String getCustomerEmail() {
-        return customerEmail;
+    public String getEmail() {
+        return email;
     }
 
-    public void setCustomerEmail(String customerEmail) {
-        this.customerEmail = customerEmail;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    public LocalDateTime getOrderDate() {
-        return orderDate;
+    public LocalDateTime getDate() {
+        return date;
     }
 
-    public void setOrderDate(LocalDateTime orderDate) {
-        this.orderDate = orderDate;
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public List<OrderItem> getItems() {
@@ -70,22 +78,14 @@ public class Order {
         this.items = items;
     }
 
-    public Double getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(Double totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
     @Override
     public String toString() {
         return "Order{" +
                 "id=" + id +
-                ", customerEmail='" + customerEmail + '\'' +
-                ", orderDate=" + orderDate +
+                ", email='" + email + '\'' +
+                ", date=" + date +
+                ", status='" + status + '\'' +
                 ", items=" + items +
-                ", totalAmount=" + totalAmount +
                 '}';
     }
 }

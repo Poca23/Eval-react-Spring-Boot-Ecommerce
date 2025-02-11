@@ -1,4 +1,3 @@
-// OrderItem.java
 package com.greta.ecommerce.entity;
 
 import jakarta.validation.constraints.NotNull;
@@ -17,21 +16,19 @@ public class OrderItem {
     @Positive(message = "La quantité doit être positive")
     private Integer quantity;
 
-    @NotNull(message = "Le prix est obligatoire")
-    @Positive(message = "Le prix doit être positif")
-    private Double price;
-
     // Constructeur par défaut
     public OrderItem() {
     }
 
     // Constructeur avec tous les champs
-    public OrderItem(Long id, Long orderId, Long productId, Integer quantity, Double price) {
+    public OrderItem(Long id, Long orderId, Long productId, Integer quantity) {
         this.id = id;
         this.orderId = orderId;
         this.productId = productId;
         this.quantity = quantity;
-        this.price = price;
+    }
+
+    public OrderItem(long id, long orderId, long productId, int quantity, double price) {
     }
 
     // Getters et Setters
@@ -67,14 +64,6 @@ public class OrderItem {
         this.quantity = quantity;
     }
 
-    public Double getPrice() {
-        return price;
-    }
-
-    public void setPrice(Double price) {
-        this.price = price;
-    }
-
     @Override
     public String toString() {
         return "OrderItem{" +
@@ -82,7 +71,6 @@ public class OrderItem {
                 ", orderId=" + orderId +
                 ", productId=" + productId +
                 ", quantity=" + quantity +
-                ", price=" + price +
                 '}';
     }
 }

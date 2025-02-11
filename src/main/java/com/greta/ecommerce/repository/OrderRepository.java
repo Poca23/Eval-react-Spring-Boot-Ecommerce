@@ -1,18 +1,16 @@
 package com.greta.ecommerce.repository;
 
 import com.greta.ecommerce.entity.Order;
-import org.springframework.dao.EmptyResultDataAccessException;
+import com.greta.ecommerce.entity.OrderItem;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -26,85 +24,110 @@ public class OrderRepository {
     }
 
     public List<Order> findAll() {
-        return jdbcTemplate.query(
-                "SELECT * FROM orders",
-                (rs, rowNum) -> {
-                    Order order = new Order(
-                            rs.getLong("id"),
-                            rs.getString("customer_email"),
-                            rs.getTimestamp("order_date").toLocalDateTime(),
-                            null,
-                            rs.getDouble("total_amount")
-                    );
-                    order.setItems(orderItemRepository.findByOrderId(order.getId()));
-                    return order;
-                }
+        String sql = "SELECT * FROM orders";
+        List<Order> orders = jdbcTemplate.query(sql, (rs, rowNum) ->
+                new Order(
+                        rs.getLong("id"),
+                        rs.getString("email"),
+                        rs.getTimestamp("date").toLocalDateTime(),
+                        rs.getString("status"),
+                        null
+                )
         );
+
+        // Charger les items pour chaque commande
+        for (Order order : orders) {
+            order.setItems(orderItemRepository.findByOrderId(order.getId()));
+        }
+        return orders;
     }
 
     public Optional<Order> findById(Long id) {
         try {
-            Order order = jdbcTemplate.queryForObject(
-                    "SELECT * FROM orders WHERE id = ?",
-                    (rs, rowNum) -> {
-                        Order o = new Order(
-                                rs.getLong("id"),
-                                rs.getString("customer_email"),
-                                rs.getTimestamp("order_date").toLocalDateTime(),
-                                null,
-                                rs.getDouble("total_amount")
-                        );
-                        o.setItems(orderItemRepository.findByOrderId(o.getId()));
-                        return o;
-                    },
-                    id
-            );
+            String sql = "SELECT * FROM orders WHERE id = ?";
+            Order order = jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
+                    new Order(
+                            rs.getLong("id"),
+                            rs.getString("email"),
+                            rs.getTimestamp("date").toLocalDateTime(),
+                            rs.getString("status"),
+                            null
+                    ), id);
+
+            if (order != null) {
+                order.setItems(orderItemRepository.findByOrderId(order.getId()));
+            }
             return Optional.ofNullable(order);
-        } catch (EmptyResultDataAccessException e) {
+        } catch (Exception e) {
             return Optional.empty();
         }
     }
 
     public List<Order> findByEmail(String email) {
-        return jdbcTemplate.query(
-                "SELECT * FROM orders WHERE customer_email = ?",
-                (rs, rowNum) -> {
-                    Order order = new Order(
-                            rs.getLong("id"),
-                            rs.getString("customer_email"),
-                            rs.getTimestamp("order_date").toLocalDateTime(),
-                            null,
-                            rs.getDouble("total_amount")
-                    );
-                    order.setItems(orderItemRepository.findByOrderId(order.getId()));
-                    return order;
-                },
-                email
-        );
+        String sql = "SELECT * FROM orders WHERE email = ?";
+        List<Order> orders = jdbcTemplate.query(sql, (rs, rowNum) ->
+                new Order(
+                        rs.getLong("id"),
+                        rs.getString("email"),
+                        rs.getTimestamp("date").toLocalDateTime(),
+                        rs.getString("status"),
+                        null
+                ), email);
+
+        for (Order order : orders) {
+            order.setItems(orderItemRepository.findByOrderId(order.getId()));
+        }
+        return orders;
     }
 
-    @Transactional
+    public List<Order> findByStatus(String status) {
+        String sql = "SELECT * FROM orders WHERE status = ?";
+        List<Order> orders = jdbcTemplate.query(sql, (rs, rowNum) ->
+                new Order(
+                        rs.getLong("id"),
+                        rs.getString("email"),
+                        rs.getTimestamp("date").toLocalDateTime(),
+                        rs.getString("status"),
+                        null
+                ), status);
+
+        for (Order order : orders) {
+            order.setItems(orderItemRepository.findByOrderId(order.getId()));
+        }
+        return orders;
+    }
+
     public Order save(Order order) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        if (order.getId() == null) {
+            // Insert
+            String sql = "INSERT INTO orders (email, date, status) VALUES (?, ?, ?)";
+            KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO orders (customer_email, order_date, total_amount) VALUES (?, ?, ?)",
-                    Statement.RETURN_GENERATED_KEYS
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                ps.setString(1, order.getEmail());
+                ps.setTimestamp(2, Timestamp.valueOf(order.getDate()));
+                ps.setString(3, order.getStatus());
+                return ps;
+            }, keyHolder);
+
+            order.setId(keyHolder.getKey().longValue());
+        } else {
+            // Update
+            String sql = "UPDATE orders SET email = ?, date = ?, status = ? WHERE id = ?";
+            jdbcTemplate.update(sql,
+                    order.getEmail(),
+                    Timestamp.valueOf(order.getDate()),
+                    order.getStatus(),
+                    order.getId()
             );
-            ps.setString(1, order.getCustomerEmail());
-            ps.setTimestamp(2, Timestamp.valueOf(order.getOrderDate()));
-            ps.setDouble(3, order.getTotalAmount());
-            return ps;
-        }, keyHolder);
+        }
 
-        Long orderId = Objects.requireNonNull(keyHolder.getKey()).longValue();
-        order.setId(orderId);
-
-        // Sauvegarde des items
         if (order.getItems() != null) {
-            order.getItems().forEach(item -> item.setOrderId(orderId));
-            orderItemRepository.saveAll(order.getItems());
+            for (OrderItem item : order.getItems()) {
+                item.setOrderId(order.getId());
+                orderItemRepository.save(item);
+            }
         }
 
         return order;
