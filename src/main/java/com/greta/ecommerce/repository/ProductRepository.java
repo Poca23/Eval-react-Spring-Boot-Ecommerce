@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -73,12 +74,12 @@ public class ProductRepository {
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKey().longValue();
+        Long id = Objects.requireNonNull(keyHolder.getKey()).longValue();
         product.setId(id);
         return product;
     }
 
-    public void update(Product product) {
+    public Product update(Product product) {
         jdbcTemplate.update(
                 "UPDATE product SET name = ?, description = ?, price = ?, stock = ?, image_url = ? WHERE id = ?",
                 product.getName(),
@@ -88,6 +89,7 @@ public class ProductRepository {
                 product.getImageUrl(),
                 product.getId()
         );
+        return product;
     }
 
     public void delete(Long id) {

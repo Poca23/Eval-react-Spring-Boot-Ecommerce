@@ -92,4 +92,10 @@ public class GlobalExceptionHandler {
                 .body("Erreur de stock : " + ex.getMessage());
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)  // 404 Not Found
+                .body("Ressource non trouvée : " + ex.getMessage());
+    }
 }
