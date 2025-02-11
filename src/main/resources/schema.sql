@@ -1,3 +1,4 @@
+J'ai déjà le script sql, son fichier est dans resources, voici son contenu :
 -- Création de la table PRODUCT
 CREATE TABLE product (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -33,7 +34,8 @@ ALTER TABLE order_item ADD CONSTRAINT check_quantity_positive CHECK (quantity > 
 
 -- Insertion de produits de test
 INSERT INTO product (name, price, stock, description) VALUES
-('iPhone 14', 999.99, 50, 'Dernier modèle d''iPhone avec appareil photo avancé'),
-('Samsung Galaxy S23', 899.99, 45, 'Smartphone Android haut de gamme'),
-('MacBook Pro', 1499.99, 30, 'Ordinateur portable Apple 14 pouces'),
-('AirPods Pro', 249.99, 100, 'Écouteurs sans fil avec réduction de bruit');
+('iPhone 24', 2999.99, 50, 'Dernier modèle d''iPhone avec appareil photo avancé  et brosse à dent intégrée'),
+('Samsung Galaxy S48', 1999.99, 45, 'Smartphone Android haut de gamme avec pochette plastifiée'),
+('MacBook Pro Plus Plus', 3001.99, 30, 'Ordinateur portable Apple 14 pouces et gant tactile'),
+('AirPods super Pro 8', 549.99, 100, 'Écouteurs sans fil avec réduction de bruit surtout pour les bêtises');
+
