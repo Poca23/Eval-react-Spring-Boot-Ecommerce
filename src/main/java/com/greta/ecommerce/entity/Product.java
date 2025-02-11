@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Min;
 
+import java.math.BigDecimal;
+
 public class Product {
     private Long id;
 
@@ -35,6 +37,9 @@ public class Product {
         this.price = price;
         this.stock = stock;
         this.imageUrl = imageUrl;
+    }
+
+    public Product(long id, String name, BigDecimal price, int stock, String description) {
     }
 
     // Getters et Setters
