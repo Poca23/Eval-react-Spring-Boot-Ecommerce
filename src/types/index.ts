@@ -1,4 +1,6 @@
 export interface Product {
+    stock: number;
+    imageUrl: string | undefined;
     id: number;
     name: string;
     price: number;
