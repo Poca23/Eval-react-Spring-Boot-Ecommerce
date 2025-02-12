@@ -1,29 +1,21 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
+import './index.css';
 
-const Header: React.FC = () => {
+function Header() {
   return (
-    <header className="bg-white shadow">
-      <nav className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center">
-          <Link to="/" className="text-xl font-bold">
-            E-commerce
-          </Link>
-          <div className="flex gap-4">
-            <Link to="/products" className="hover:text-gray-600">
-              Products
-            </Link>
-            <Link to="/cart" className="hover:text-gray-600">
-              Cart
-            </Link>
-            <Link to="/orders" className="hover:text-gray-600">
-              Orders
-            </Link>
-          </div>
+    <header className="header">
+      <div className="header-content">
+        <div className="logo">
+          <Link to="/">E-Commerce</Link>
         </div>
-      </nav>
+        <nav className="nav-links">
+          <Link to="/products">Produits</Link>
+          <Link to="/cart">Panier</Link>
+          <Link to="/admin/orders">Admin</Link>
+        </nav>
+      </div>
     </header>
   );
-};
+}
 
 export default Header;
