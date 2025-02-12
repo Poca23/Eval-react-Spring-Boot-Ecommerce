@@ -1,102 +1,88 @@
 // src/components/cart/CheckoutForm.tsx
-
-import React, { useState } from 'react';
-import { useCart } from '../../contexts/CartContext';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useOrder } from '../../hooks/useOrder';
+import { useCart } from '../../hooks/useCart';
+import './CheckoutForm.css';
 
-const CheckoutForm: React.FC = () => {
+function CheckoutForm() {
   const [email, setEmail] = useState('');
-  const [error, setError] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { cart, total, clearCart } = useCart();
+  const [emailError, setEmailError] = useState('');
+  const { createOrder, loading, error } = useOrder();
+  const { cart } = useCart();
   const navigate = useNavigate();
 
-  const validateEmail = (email: string): boolean => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
+  const validateEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
-    // Validation de l'email
     if (!validateEmail(email)) {
-      setError('Veuillez entrer une adresse email valide');
+      setEmailError('Veuillez entrer une adresse email valide');
       return;
     }
 
-    // Validation du panier
     if (cart.length === 0) {
-      setError('Votre panier est vide');
+      setEmailError('Votre panier est vide');
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-
-      const orderData = {
-        email,
-        items: cart.map(item => ({
-          productId: item.product.id,
-          quantity: item.quantity
-        }))
-      };
-
-      const response = await fetch('http://localhost:8080/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la création de la commande');
-      }
-
-      // Succès
-      clearCart();
+    const success = await createOrder(email);
+    if (success) {
       navigate('/order-confirmation');
-    } catch (error) {
-      setError('Une erreur est survenue lors de la création de la commande');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="checkout-form">
+    <div className="checkout-form-container">
       <h2>Finaliser la commande</h2>
-      <form onSubmit={handleSubmit}>
+      
+      {error && <div className="error-message">{error}</div>}
+      
+      <form onSubmit={handleSubmit} className="checkout-form">
         <div className="form-group">
           <label htmlFor="email">Email :</label>
           <input
             type="email"
             id="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailError('');
+            }}
             placeholder="votre@email.com"
+            required
           />
+          {emailError && <div className="error-message">{emailError}</div>}
         </div>
 
         <div className="order-summary">
-          <p>Total de la commande : {total.toFixed(2)}€</p>
-          <p>Nombre d'articles : {cart.length}</p>
+          <h3>Récapitulatif de la commande</h3>
+          <ul>
+            {cart.map(item => (
+              <li key={item.id}>
+                {item.name} x {item.quantity} = {(item.price * item.quantity).toFixed(2)}€
+              </li>
+            ))}
+          </ul>
+          <div className="total">
+            Total: {cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}€
+          </div>
         </div>
-
-        {error && <div className="error-message">{error}</div>}
 
         <button 
           type="submit" 
-          disabled={isSubmitting}
+          disabled={loading || cart.length === 0}
+          className="submit-button"
         >
-          {isSubmitting ? 'Traitement en cours...' : 'Confirmer la commande'}
+          {loading ? 'Traitement...' : 'Confirmer la commande'}
         </button>
       </form>
     </div>
   );
-};
+}
 
 export default CheckoutForm;
