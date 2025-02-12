@@ -1,15 +1,17 @@
 // src/components/cart/CheckoutForm.tsx
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrder } from '../../hooks/useOrder';
 import { useCart } from '../../hooks/useCart';
+import { useStock } from '../../hooks/useStock';
 import './CheckoutForm.css';
 
-function CheckoutForm() {
+const CheckoutForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
-  const { createOrder, loading, error } = useOrder();
+  const { createOrder, loading: orderLoading, error: orderError } = useOrder();
   const { cart } = useCart();
+  const { validateCartStocks, loading: stockLoading } = useStock();
   const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
@@ -30,17 +32,32 @@ function CheckoutForm() {
       return;
     }
 
+    const cartItems = cart.map(item => ({
+      productId: item.id,
+      quantity: item.quantity
+    }));
+
+    const stocksValid = await validateCartStocks(cartItems);
+    if (!stocksValid) {
+      setEmailError('Certains produits ne sont plus disponibles en quantité suffisante');
+      return;
+    }
+
     const success = await createOrder(email);
     if (success) {
       navigate('/order-confirmation');
     }
   };
 
+  const loading = orderLoading || stockLoading;
+
   return (
     <div className="checkout-form-container">
       <h2>Finaliser la commande</h2>
       
-      {error && <div className="error-message">{error}</div>}
+      {(orderError || emailError) && (
+        <div className="error-message">{orderError || emailError}</div>
+      )}
       
       <form onSubmit={handleSubmit} className="checkout-form">
         <div className="form-group">
@@ -55,8 +72,8 @@ function CheckoutForm() {
             }}
             placeholder="votre@email.com"
             required
+            disabled={loading}
           />
-          {emailError && <div className="error-message">{emailError}</div>}
         </div>
 
         <div className="order-summary">
@@ -83,6 +100,6 @@ function CheckoutForm() {
       </form>
     </div>
   );
-}
+};
 
 export default CheckoutForm;
