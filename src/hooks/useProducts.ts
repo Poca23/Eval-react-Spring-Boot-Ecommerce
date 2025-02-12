@@ -21,8 +21,17 @@ export function useProducts() {
       }
     };
 
+    const checkStock = async (productId: number, quantity: number): Promise<boolean> => {
+      try {
+        return await api.checkProductStock(productId, quantity);
+      } catch (error) {
+        console.error('Erreur lors de la vérification du stock:', error);
+        return false;
+      }
+    };
+
     fetchProducts();
   }, []);
 
-  return { products, loading, error };
+  return { products, loading, error, checkStock };
 }

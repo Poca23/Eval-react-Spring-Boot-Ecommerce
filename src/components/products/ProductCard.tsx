@@ -8,8 +8,8 @@ interface ProductCardProps {
   product: Product;
 }
 
-function ProductCard({ product }: ProductCardProps) {
-  const { addToCart } = useCart();
+function ProductCard({ product }: { product: Product }) {
+  const { addToCart, stockError } = useCart();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault(); // Empêche la navigation lors du clic sur le bouton
@@ -22,6 +22,7 @@ function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
+    <div className="product-card">
     <Link to={`/products/${product.id}`} className="product-card">
       <div className="product-card-image">
         <img src={product.imageUrl} alt={product.name} />
@@ -44,6 +45,18 @@ function ProductCard({ product }: ProductCardProps) {
         </div>
       </div>
     </Link>
+    <div className="product-stock">
+        Stock: {product.stock} {product.stock === 0 && <span className="out-of-stock">Rupture de stock</span>}
+      </div>
+      {stockError && <div className="error-message">{stockError}</div>}
+      <button 
+        onClick={() => addToCart(product)} 
+        disabled={product.stock === 0}
+        className={product.stock === 0 ? 'disabled' : ''}
+      >
+        {product.stock === 0 ? 'Indisponible' : 'Ajouter au panier'}
+      </button>
+    </div>
   );
 }
 
