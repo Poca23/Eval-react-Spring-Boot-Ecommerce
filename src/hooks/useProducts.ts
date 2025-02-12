@@ -1,28 +1,28 @@
-// src/hooks/useProduct.ts
+// src/hooks/useProducts.ts
 import { useState, useEffect } from 'react';
 import { Product, api } from '../services/api';
 
-export function useProduct(id: number) {
-  const [product, setProduct] = useState<Product | null>(null);
+export function useProducts() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProducts = async () => {
       try {
         setLoading(true);
-        const data = await api.getProduct(id);
-        setProduct(data);
+        const data = await api.getAllProducts();
+        setProducts(data);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+        setError(err instanceof Error ? err.message : 'Erreur lors du chargement des produits');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProduct();
-  }, [id]);
+    fetchProducts();
+  }, []);
 
-  return { product, loading, error };
+  return { products, loading, error };
 }
