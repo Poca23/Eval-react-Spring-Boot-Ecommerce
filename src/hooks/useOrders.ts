@@ -1,21 +1,25 @@
 // src/hooks/useOrders.ts
 import { useState, useEffect, useCallback } from "react";
-import { Order, OrderRequest, OrderItem } from "../types"; 
+import { Order } from "../services/api"; // Import depuis api.ts
 import { api } from "../services/api";
 import { useCart } from "./useCart";
-import { useProducts } from "./useProducts";
+import { stockService } from "../services/stockService";
 import { CartItem } from "../types";
-import '../../styles/index.css';
 
+interface CreateOrderDTO {
+  email: string;
+  items: {
+    product_id: number;
+    quantity: number;
+  }[];
+}
 
 export function useOrders(emailFilter?: string) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { cart, clearCart } = useCart();
-  const { checkStock } = useProducts();
 
-  // Fonction pour récupérer les commandes avec useCallback
   const fetchOrders = useCallback(async () => {
     if (emailFilter === undefined) return;
 
@@ -35,27 +39,23 @@ export function useOrders(emailFilter?: string) {
     fetchOrders();
   }, [fetchOrders]);
 
-  // Validation des stocks avec useCallback
   const validateStocks = useCallback(
     async (items: CartItem[]): Promise<boolean> => {
       for (const item of items) {
-        try {
-          const isAvailable = await checkStock(item.product.id, item.quantity);
-          if (!isAvailable) {
-            setError(`Stock insuffisant pour ${item.product.name}`);
-            return false;
-          }
-        } catch (err) {
-          setError("Erreur lors de la vérification des stocks");
+        const isAvailable = await stockService.checkStock(
+          item.product.id,
+          item.quantity
+        );
+        if (!isAvailable) {
+          setError(`Stock insuffisant pour ${item.product.name}`);
           return false;
         }
       }
       return true;
     },
-    [checkStock]
+    []
   );
 
-  // Création d'une nouvelle commande avec useCallback
   const createOrder = useCallback(
     async (email: string): Promise<boolean> => {
       try {
@@ -63,26 +63,18 @@ export function useOrders(emailFilter?: string) {
         setError(null);
 
         const stocksValid = await validateStocks(cart);
-        if (!stocksValid) {
-          return false;
-        }
+        if (!stocksValid) return false;
 
-        const orderRequest: OrderRequest = {
-          customerEmail: email,
+        const orderData: CreateOrderDTO = {
+          email,
           items: cart.map((item) => ({
-            productId: item.product.id,
+            product_id: item.product.id,
             quantity: item.quantity,
-            price: item.product.price,
           })),
-          totalAmount: cart.reduce(
-            (sum, item) => sum + item.product.price * item.quantity,
-            0
-          ),
         };
 
-        await api.createOrder(orderRequest);
+        await api.createOrder(orderData);
         clearCart();
-        // Rafraîchir la liste des commandes après création
         await fetchOrders();
         return true;
       } catch (err) {
@@ -104,6 +96,6 @@ export function useOrders(emailFilter?: string) {
     createOrder,
     loading,
     error,
-    refreshOrders: fetchOrders, // Exposer la fonction de rafraîchissement
+    refreshOrders: fetchOrders,
   };
 }

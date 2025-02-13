@@ -1,5 +1,38 @@
 import { API_URL } from "../config/api.config";
 
+// Interfaces
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  stock: number;
+  image_url: string; // Ajout de image_url
+  description: string; // Ajout de description
+}
+
+export interface OrderItem {
+  id: number;
+  order_id: number;
+  product_id: number;
+  quantity: number;
+}
+
+export interface OrderRequest {
+  email: string;
+  items: {
+    product_id: number;
+    quantity: number;
+  }[];
+}
+
+export interface Order {
+  id: number;
+  email: string;
+  date: string;
+  status: string;
+}
+
+// API methods
 export const api = {
   getOrders: async (emailFilter?: string): Promise<Order[]> => {
     const response = await fetch(
@@ -8,7 +41,6 @@ export const api = {
     return response.json();
   },
 
-  // Ajout de la méthode pour récupérer un produit spécifique
   async getProduct(id: number): Promise<Product> {
     const response = await fetch(`${API_URL}/products/${id}`);
     if (!response.ok) {
@@ -48,7 +80,7 @@ export const api = {
     productId: number,
     newStock: number
   ): Promise<Product> => {
-    const response = await fetch(`${API_URL}/products/${productId}/stock`, {
+    const response = await fetch(`${API_URL}/products/${productId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -71,7 +103,7 @@ export const api = {
     quantity: number
   ): Promise<boolean> => {
     const response = await fetch(
-      `${API_URL}/products/${productId}/check-stock?quantity=${quantity}`
+      `${API_URL}/products/${productId}/stock?quantity=${quantity}`
     );
 
     if (!response.ok) {
@@ -81,24 +113,3 @@ export const api = {
     return response.json();
   },
 };
-
-export interface OrderItem {
-  productId: number;
-  quantity: number;
-  price: number;
-}
-
-export interface OrderRequest {
-  customerEmail: string;
-  items: OrderItem[];
-  totalAmount: number;
-}
-
-export interface Order {
-  id: number;
-  customerEmail: string;
-  items: OrderItem[];
-  totalAmount: number;
-  status: "PENDING" | "COMPLETED" | "CANCELLED";
-  createdAt: string;
-}

@@ -1,67 +1,68 @@
 // src/components/admin/AdminOrders.tsx
 import React, { useState, useCallback } from 'react';
 import { useOrders } from '../../hooks/useOrders';
-import { useError } from '../../contexts/ErrorContext';
-import { handleApiError } from '../../utils/errorHandler';
+import { useError } from '../../hooks/useError';
+import { formatDate, formatPrice } from '../../utils/formatters';
+import { validateEmail } from '../../utils/validators';
 import { ERROR_MESSAGES } from '../../utils/errorMessages';
 import '../../styles/index.css';
+
+interface OrderItemDisplay {
+  id: number;
+  product_id: number;
+  quantity: number;
+  name: string;
+  price: number;
+}
+
+interface OrderDisplay {
+  id: number;
+  email: string;
+  date: string;
+  status: string;
+  items: OrderItemDisplay[];
+}
 
 export const AdminOrders: React.FC = () => {
   const [searchEmail, setSearchEmail] = useState('');
   const { setError, clearError } = useError();
-  const { orders, loading, error: ordersError } = useOrders(searchEmail);
+  const { orders, loading, error: ordersError, refreshOrders } = useOrders(searchEmail);
 
   const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      clearError();
-      const email = e.target.value;
-      
-      // Validation basique de l'email si non vide
-      if (email && !email.includes('@')) {
-        setError(ERROR_MESSAGES.ORDER.INVALID_EMAIL);
-        return;
-      }
-
-      setSearchEmail(email);
-    } catch (err) {
-      setError(handleApiError(err));
+    const email = e.target.value;
+    clearError();
+    
+    if (email && !validateEmail(email)) {
+      setError(ERROR_MESSAGES.VALIDATION.INVALID_EMAIL);
+      return;
     }
+
+    setSearchEmail(email);
   }, [setError, clearError]);
 
-  // Gestion des erreurs du hook useOrders
   React.useEffect(() => {
     if (ordersError) {
-      setError(handleApiError(ordersError));
+      setError(ordersError);
     }
   }, [ordersError, setError]);
 
-  const formatDate = useCallback((dateString: string): string => {
-    try {
-      return new Date(dateString).toLocaleDateString('fr-FR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (err) {
-      setError(handleApiError(err));
-      return dateString;
-    }
-  }, [setError]);
-
-  const formatPrice = useCallback((price: number): string => {
-    try {
-      return `${price.toFixed(2)}€`;
-    } catch (err) {
-      setError(handleApiError(err));
-      return `${price}€`;
-    }
-  }, [setError]);
+  // Fonction pour rafraîchir les commandes
+  const handleRefresh = useCallback(() => {
+    refreshOrders();
+  }, [refreshOrders]);
 
   return (
     <div className="admin-orders">
-      <h1>Gestion des Commandes</h1>
+      <div className="admin-orders-header">
+        <h1>Gestion des Commandes</h1>
+        <button 
+          onClick={handleRefresh}
+          className="refresh-button"
+          disabled={loading}
+        >
+          Rafraîchir
+        </button>
+      </div>
       
       <div className="search-bar">
         <input
@@ -88,29 +89,39 @@ export const AdminOrders: React.FC = () => {
             orders.map((order) => (
               <div key={order.id} className="order-card">
                 <div className="order-header">
-                  <div className="order-email">
-                    <strong>Email:</strong> {order.email}
+                  <div className="order-info">
+                    <span className="order-id">Commande #{order.id}</span>
+                    <span className="order-email">{order.email}</span>
+                    <span className="order-date">{formatDate(order.date)}</span>
                   </div>
-                  <div className="order-date">
-                    <strong>Date:</strong> {formatDate(order.createdAt)}
+                  <div className="order-status">
+                    <span className={`status-badge ${order.status.toLowerCase()}`}>
+                      {order.status}
+                    </span>
                   </div>
                 </div>
                 
                 <div className="order-items">
-                  <strong>Articles:</strong>
-                  {order.items.map((item) => (
-                    <div key={item.productId} className="order-item">
-                      <span className="item-name">{item.productName}</span>
-                      <span className="item-quantity">x{item.quantity}</span>
-                      <span className="item-price">
-                        {formatPrice(item.price * item.quantity)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="order-total">
-                  <strong>Total:</strong> {formatPrice(order.total)}
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Produit</th>
+                        <th>Quantité</th>
+                        <th>Prix unitaire</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {order.items.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.name}</td>
+                          <td>{item.quantity}</td>
+                          <td>{formatPrice(item.price)}</td>
+                          <td>{formatPrice(item.price * item.quantity)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             ))

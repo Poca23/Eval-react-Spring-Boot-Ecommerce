@@ -48,8 +48,86 @@ a:hover {
   text-decoration: underline;
 }
 
-/*Checkout CSS */
-/* src/components/cart/CheckoutForm.css */
+/* CheckoutForm CSS */
+
+/* Header du formulaire */
+.checkout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Bouton de fermeture */
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+/* Style pour les champs en erreur */
+.form-group input.error {
+  border-color: #dc3545;
+}
+
+/* Message panier vide */
+.empty-cart-message {
+  color: #666;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Styles pour l'item de commande */
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.item-name {
+  flex: 1;
+}
+
+.item-quantity {
+  color: #666;
+}
+
+.item-price {
+  font-weight: bold;
+}
+
+/* Spinner pour le bouton de soumission */
+.submit-button.processing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .checkout-form-container {
   max-width: 600px;
   margin: 2rem auto;
@@ -157,6 +235,7 @@ a:hover {
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1rem 0;
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -229,7 +308,9 @@ a:hover {
 
 .product-detail-image {
   width: 100%;
-  aspect-ratio: 1;
+  width: 100%;
+  padding-top: 100%;
+  position: relative;
   overflow: hidden;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -608,7 +689,6 @@ button.disabled {
   color: #666;
 }
 
-
 /* ERROR CSS */
 .error-message {
   text-align: center;
@@ -635,7 +715,6 @@ button.disabled {
     padding: 1rem;
   }
 }
-
 
 .error-message {
   background-color: #fff3cd;

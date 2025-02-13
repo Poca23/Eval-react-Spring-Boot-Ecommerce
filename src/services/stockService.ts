@@ -1,5 +1,5 @@
 // src/services/stockService.ts
-import { api } from './api';
+import { api } from "./api";
 
 export const stockService = {
   /**
@@ -7,13 +7,9 @@ export const stockService = {
    */
   checkStock: async (productId: number, quantity: number): Promise<boolean> => {
     try {
-      const response = await fetch(`${api.baseUrl}/products/${productId}/check-stock?quantity=${quantity}`);
-      if (!response.ok) {
-        throw new Error('Erreur lors de la vérification du stock');
-      }
-      return await response.json();
+      return await api.checkProductStock(productId, quantity);
     } catch (error) {
-      console.error('Erreur de vérification du stock:', error);
+      console.error("Erreur de vérification du stock:", error);
       return false;
     }
   },
@@ -21,23 +17,15 @@ export const stockService = {
   /**
    * Met à jour le stock d'un produit
    */
-  updateStock: async (productId: number, newStock: number): Promise<boolean> => {
+  updateStock: async (
+    productId: number,
+    newStock: number
+  ): Promise<boolean> => {
     try {
-      const response = await fetch(`${api.baseUrl}/products/${productId}/stock`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ stock: newStock }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erreur lors de la mise à jour du stock');
-      }
-      
+      await api.updateProductStock(productId, newStock);
       return true;
     } catch (error) {
-      console.error('Erreur de mise à jour du stock:', error);
+      console.error("Erreur de mise à jour du stock:", error);
       return false;
     }
   },
@@ -45,16 +33,21 @@ export const stockService = {
   /**
    * Vérifie les stocks pour plusieurs produits en même temps
    */
-  checkMultipleStocks: async (items: { productId: number; quantity: number }[]): Promise<boolean> => {
+  checkMultipleStocks: async (
+    items: { product_id: number; quantity: number }[]
+  ): Promise<boolean> => {
     try {
       for (const item of items) {
-        const isAvailable = await stockService.checkStock(item.productId, item.quantity);
+        const isAvailable = await stockService.checkStock(
+          item.product_id,
+          item.quantity
+        );
         if (!isAvailable) return false;
       }
       return true;
     } catch (error) {
-      console.error('Erreur de vérification multiple des stocks:', error);
+      console.error("Erreur de vérification multiple des stocks:", error);
       return false;
     }
-  }
+  },
 };
