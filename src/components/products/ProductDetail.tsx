@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useCart } from '../../hooks/useCart';
 import { useError } from '../../hooks/useError';
-import { Product, CartItem } from '../../types';
+import { Product } from '../../types';
 import { ERROR_MESSAGES } from '../../utils/errorMessages';
 import '../../styles/index.css';
 
@@ -34,12 +34,7 @@ export const ProductDetail: React.FC = () => {
 
   const handleAddToCart = async () => {
     try {
-      const cartItem: CartItem = {
-        product: product,
-        quantity: 1
-      };
-      
-      await addToCart(cartItem);
+      await addToCart(product, 1);
     } catch (error) {
       handleError(error, ERROR_MESSAGES.CART.ADD_ERROR);
     }
@@ -53,7 +48,7 @@ export const ProductDetail: React.FC = () => {
           alt={product.name}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.src = '/placeholder-image.jpg'; // Assurez-vous d'avoir une image par défaut
+            target.src = '/placeholder-image.jpg';
           }}
         />
       </div>

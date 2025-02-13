@@ -23,7 +23,7 @@ function App() {
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/admin/orders" element={<OrderList />} />
+            <Route path="/admin/orders" element={<OrderList orders={[]} />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
           </Routes>

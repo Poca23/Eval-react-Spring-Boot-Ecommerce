@@ -1,18 +1,12 @@
 // src/hooks/useOrders.ts
 import { useState, useEffect, useCallback } from "react";
-import { Order } from "../services/api"; // Import depuis api.ts
+import { Order, OrderRequest } from "../types";
 import { api } from "../services/api";
 import { useCart } from "./useCart";
 import { stockService } from "../services/stockService";
 import { CartItem } from "../types";
 
-interface CreateOrderDTO {
-  email: string;
-  items: {
-    product_id: number;
-    quantity: number;
-  }[];
-}
+type OrderWithSuccess = Order & { success: boolean };
 
 export function useOrders(emailFilter?: string) {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -57,33 +51,31 @@ export function useOrders(emailFilter?: string) {
   );
 
   const createOrder = useCallback(
-    async (email: string): Promise<boolean> => {
+    async (orderData: OrderRequest): Promise<OrderWithSuccess | null> => {
       try {
         setLoading(true);
         setError(null);
 
         const stocksValid = await validateStocks(cart);
-        if (!stocksValid) return false;
+        if (!stocksValid) {
+          return null;
+        }
 
-        const orderData: CreateOrderDTO = {
-          email,
-          items: cart.map((item) => ({
-            product_id: item.product.id,
-            quantity: item.quantity,
-          })),
-        };
-
-        await api.createOrder(orderData);
+        const createdOrder = await api.createOrder(orderData);
         clearCart();
         await fetchOrders();
-        return true;
+        
+        return {
+          ...createdOrder,
+          success: true
+        };
       } catch (err) {
         setError(
           err instanceof Error
             ? err.message
             : "Erreur lors de la création de la commande"
         );
-        return false;
+        return null;
       } finally {
         setLoading(false);
       }

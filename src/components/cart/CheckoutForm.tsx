@@ -8,6 +8,7 @@ import { useError } from '../../contexts/ErrorContext';
 import { handleApiError } from '../../utils/errorHandler';
 import { validators } from '../../utils/validators';
 import { ERROR_MESSAGES } from '../../utils/errorMessages';
+import { OrderRequest, CartItem } from '../../types';
 import '../../styles/index.css';
 
 interface CheckoutFormProps {
@@ -19,7 +20,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onClose }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { setError } = useError();
   const { createOrder } = useOrders();
-  const { cart, clearCart } = useCart();
+  const { cart } = useCart();
   const { validateCartStocks } = useStock();
   const navigate = useNavigate();
 
@@ -37,6 +38,10 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onClose }) => {
     return true;
   };
 
+  const calculateTotal = (cartItems: CartItem[]) => {
+    return cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -44,31 +49,38 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onClose }) => {
 
     setIsProcessing(true);
     try {
-      // Préparation des items du panier
-      const cartItems = cart.map(item => ({
-        productId: item.product.id,
+      const orderRequest: OrderRequest = {
+        email,
+        items: cart.map(item => ({
+          product_id: item.product.id,
+          quantity: item.quantity
+        })),
+        totalAmount: calculateTotal(cart)
+      };
+
+      // Conversion de CartItem[] vers StockItem[]
+      const stockItems = cart.map(item => ({
+        product_id: item.product.id,
         quantity: item.quantity
       }));
 
-      // Validation des stocks
-      const stocksValid = await validateCartStocks(cartItems);
+      const stocksValid = await validateCartStocks(stockItems);
       if (!stocksValid) {
         throw new Error(ERROR_MESSAGES.CART.STOCK_LIMIT);
       }
 
-      // Création de la commande
-      const orderResult: { success: boolean; orderId?: string } = await createOrder({ 
-        email, 
-        items: cartItems,
-        total: calculateTotal()
-      });
-
-      if (orderResult && orderResult.success) {
-        await clearCart();
+      const result = await createOrder(orderRequest);
+      
+      if (result && result.success) {
         navigate('/order-confirmation', { 
-          state: { orderId: orderResult.orderId }
+          state: { 
+            orderId: result.id,
+            email: result.email,
+            status: result.status
+          }
         });
-      }
+      } else {
+        throw new Error(ERROR_MESSAGES.ORDER.CREATE_ERROR);      }
     } catch (err) {
       setError(handleApiError(err));
     } finally {
@@ -76,18 +88,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onClose }) => {
     }
   };
 
-  const calculateTotal = () => {
-    return cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  };
-
   return (
     <div className="checkout-form-container">
       <div className="checkout-header">
         <h2>Finaliser la commande</h2>
         {onClose && (
-          <button onClick={onClose} className="close-button">
-            ×
-          </button>
+          <button onClick={onClose} className="close-button">×</button>
         )}
       </div>
       
@@ -119,7 +125,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onClose }) => {
             ))}
           </ul>
           <div className="total">
-            <strong>Total:</strong> {calculateTotal().toFixed(2)}€
+            <strong>Total:</strong> {calculateTotal(cart).toFixed(2)}€
           </div>
         </div>
 

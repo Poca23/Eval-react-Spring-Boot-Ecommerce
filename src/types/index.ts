@@ -43,3 +43,17 @@ export interface OrderRequest {
 export interface OrderListProps {
   orders: Order[];
 }
+
+export interface OrderDisplay extends Omit<Order, 'items'> {
+  items: OrderItemDisplay[];
+}
+
+export interface OrderItemDisplay extends OrderItem {
+  name: string;
+  price: number;  
+}
+
+export interface StockItem {
+  product_id: number;
+  quantity: number;
+}

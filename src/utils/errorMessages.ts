@@ -25,18 +25,17 @@ export const ERROR_MESSAGES = {
 
   ORDER: {
     CREATE_ERROR: "Erreur lors de la création de la commande",
-    FETCH_ERROR: "Impossible de charger les commandes",
-    UPDATE_ERROR: "Impossible de mettre à jour la commande",
-    DELETE_ERROR: "Impossible de supprimer la commande",
-    INVALID_EMAIL: "Veuillez entrer une adresse email valide",
-    EMPTY_ORDER: "Impossible de créer une commande vide",
-    INVALID_AMOUNT: "Montant total invalide",
+    FETCH_ERROR: "Erreur lors de la récupération des commandes",
+    UPDATE_ERROR: "Erreur lors de la mise à jour de la commande",
+    DELETE_ERROR: "Erreur lors de la suppression de la commande",
+    INVALID_EMAIL: "L'adresse email n'est pas valide",
+    EMPTY_ORDER: "La commande ne peut pas être vide",
+    INVALID_AMOUNT: "Le montant de la commande n'est pas valide",
     PROCESSING_ERROR: "Erreur lors du traitement de la commande",
-    STOCK_VALIDATION_ERROR:
-      "Certains produits ne sont plus disponibles en quantité suffisante",
+    STOCK_VALIDATION_ERROR: "Erreur de validation des stocks",
     INVALID_STATUS: "Statut de commande invalide",
     DUPLICATE_ORDER: "Cette commande existe déjà",
-  },
+    CREATION_FAILED: "La création de la commande a échoué"  },
 
   VALIDATION: {
     REQUIRED_FIELD: "Ce champ est requis",

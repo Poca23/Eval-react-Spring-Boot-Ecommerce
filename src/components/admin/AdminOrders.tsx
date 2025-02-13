@@ -1,4 +1,3 @@
-// src/components/admin/AdminOrders.tsx
 import React, { useState, useCallback } from 'react';
 import { useOrders } from '../../hooks/useOrders';
 import { useError } from '../../hooks/useError';
@@ -49,6 +48,17 @@ export const AdminOrders: React.FC = () => {
     });
   }, [refreshOrders, handleError, clearError]);
 
+  const transformOrderToDisplay = (order: Order): OrderDisplay => {
+    return {
+      ...order,
+      items: order.items?.map(item => ({
+        ...item,
+        name: item.product?.name || 'Produit inconnu',
+        price: item.product?.price || 0
+      })) || []
+    };
+  };
+
   return (
     <div className="admin-orders">
       <div className="admin-orders-header">
@@ -84,45 +94,48 @@ export const AdminOrders: React.FC = () => {
                 : "Aucune commande disponible"}
             </div>
           ) : (
-            orders.map((order: OrderDisplay) => (
-              <div key={order.id} className="order-card">
-                <div className="order-header">
-                  <div className="order-info">
-                    <span className="order-id">Commande #{order.id}</span>
-                    <span className="order-email">{order.email}</span>
-                    <span className="order-date">{formatDate(order.date)}</span>
+            orders.map((orderData: Order) => {
+              const order = transformOrderToDisplay(orderData);
+              return (
+                <div key={order.id} className="order-card">
+                  <div className="order-header">
+                    <div className="order-info">
+                      <span className="order-id">Commande #{order.id}</span>
+                      <span className="order-email">{order.email}</span>
+                      <span className="order-date">{formatDate(order.date)}</span>
+                    </div>
+                    <div className="order-status">
+                      <span className={`status-badge ${order.status.toLowerCase()}`}>
+                        {order.status}
+                      </span>
+                    </div>
                   </div>
-                  <div className="order-status">
-                    <span className={`status-badge ${order.status.toLowerCase()}`}>
-                      {order.status}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="order-items">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Produit</th>
-                        <th>Quantité</th>
-                        <th>Prix unitaire</th>
-                        <th>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {order.items.map((item: OrderItemDisplay) => (
-                        <tr key={item.id}>
-                          <td>{item.name}</td>
-                          <td>{item.quantity}</td>
-                          <td>{formatPrice(item.price)}</td>
-                          <td>{formatPrice(item.price * item.quantity)}</td>
+                  
+                  <div className="order-items">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Produit</th>
+                          <th>Quantité</th>
+                          <th>Prix unitaire</th>
+                          <th>Total</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {order.items.map((item: OrderItemDisplay) => (
+                          <tr key={item.id}>
+                            <td>{item.name}</td>
+                            <td>{item.quantity}</td>
+                            <td>{formatPrice(item.price)}</td>
+                            <td>{formatPrice(item.price * item.quantity)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}

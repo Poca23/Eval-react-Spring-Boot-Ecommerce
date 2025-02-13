@@ -2,8 +2,7 @@
 import { useState, useCallback } from "react";
 import { Product, CartItem } from "../types";
 import { useStock } from "./useStock";
-import '../styles/index.css';
-
+import "../styles/index.css";
 
 export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -11,7 +10,7 @@ export function useCart() {
   const { checkProductStock } = useStock();
 
   const addToCart = useCallback(
-    async (product: Product, quantity: number = 1) => {
+    async (product: Product, quantity: number = 1): Promise<boolean> => {
       setStockError(null);
 
       const isStockAvailable = await checkProductStock(product.id, quantity);
@@ -21,17 +20,19 @@ export function useCart() {
       }
 
       setCart((currentCart) => {
-        const existingItem = currentCart.find((item) => item.id === product.id);
+        const existingItem = currentCart.find(
+          (item) => item.product.id === product.id
+        );
 
         if (existingItem) {
           return currentCart.map((item) =>
-            item.id === product.id
+            item.product.id === product.id
               ? { ...item, quantity: item.quantity + quantity }
               : item
           );
         }
 
-        return [...currentCart, { ...product, quantity }];
+        return [...currentCart, { product, quantity }];
       });
 
       return true;
@@ -40,7 +41,7 @@ export function useCart() {
   );
 
   const updateQuantity = useCallback(
-    async (productId: number, newQuantity: number) => {
+    async (productId: number, newQuantity: number): Promise<boolean> => {
       const isStockAvailable = await checkProductStock(productId, newQuantity);
       if (!isStockAvailable) {
         setStockError("Stock insuffisant");
@@ -49,7 +50,9 @@ export function useCart() {
 
       setCart((currentCart) =>
         currentCart.map((item) =>
-          item.id === productId ? { ...item, quantity: newQuantity } : item
+          item.product.id === productId
+            ? { ...item, quantity: newQuantity }
+            : item
         )
       );
       return true;
@@ -57,13 +60,13 @@ export function useCart() {
     [checkProductStock]
   );
 
-  const removeFromCart = useCallback((productId: number) => {
+  const removeFromCart = useCallback((productId: number): void => {
     setCart((currentCart) =>
-      currentCart.filter((item) => item.id !== productId)
+      currentCart.filter((item) => item.product.id !== productId)
     );
   }, []);
 
-  const clearCart = useCallback(() => {
+  const clearCart = useCallback((): void => {
     setCart([]);
   }, []);
 
