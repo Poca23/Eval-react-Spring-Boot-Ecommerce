@@ -1,22 +1,39 @@
+// src/types/index.ts
 export interface Product {
-    stock: number;
-    imageUrl: string | undefined;
-    id: number;
-    name: string;
-    price: number;
-    description: string;
-    image: string;
-  }
-  
-  export interface CartItem {
-    product: Product;
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+  image: string;
+  stock: number;
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
+export interface Order {
+  id: number;
+  customerEmail: string;
+  items: OrderItem[];
+  totalAmount: number;
+  createdAt: string;
+}
+
+export interface OrderItem {
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: number;
+}
+
+export interface OrderRequest {
+  customerEmail: string;
+  items: {
+    productId: number;
     quantity: number;
-  }
-  
-  export interface Order {
-    id: number;
-    items: CartItem[];
-    total: number;
-    date: string;
-  }
-  
+    price: number;
+  }[];
+  totalAmount: number;
+}

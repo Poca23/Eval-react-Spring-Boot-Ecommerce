@@ -7,9 +7,14 @@ import OrderList from './components/orders/OrderList';
 import { CartProvider } from './contexts/CartContext';
 import OrderConfirmation from './components/cart/OrderConfirmation';
 import AdminOrders from './components/admin/AdminOrders';
+import { ErrorProvider } from './contexts/ErrorContext';
+import { Toast } from './components/common/Toast';
+
 
 function App() {
   return (
+    <ErrorProvider>
+      <Toast />
     <Router>
       <CartProvider>
         <Layout>
@@ -25,6 +30,8 @@ function App() {
         </Layout>
       </CartProvider>
     </Router>
+    <Toast />
+    </ErrorProvider>
   );
 }
 

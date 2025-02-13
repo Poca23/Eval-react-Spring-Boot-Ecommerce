@@ -1,63 +1,95 @@
 // src/components/cart/CheckoutForm.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useOrder } from '../../hooks/useOrder';
+import { useOrders } from '../../hooks/useOrders';
 import { useCart } from '../../hooks/useCart';
 import { useStock } from '../../hooks/useStock';
-import './CheckoutForm.css';
+import { useError } from '../../contexts/ErrorContext';
+import { handleApiError } from '../../utils/errorHandler';
+import { validators } from '../../utils/validators';
+import { ERROR_MESSAGES } from '../../utils/errorMessages';
+import '../../../index.css';
 
-const CheckoutForm: React.FC = () => {
+interface CheckoutFormProps {
+  onClose?: () => void;
+}
+
+const CheckoutForm: React.FC<CheckoutFormProps> = ({ onClose }) => {
   const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const { createOrder, loading: orderLoading, error: orderError } = useOrder();
-  const { cart } = useCart();
-  const { validateCartStocks, loading: stockLoading } = useStock();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { setError } = useError();
+  const { createOrder } = useOrders();
+  const { cart, clearCart } = useCart();
+  const { validateCartStocks } = useStock();
   const navigate = useNavigate();
 
-  const validateEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
+  const validateForm = () => {
+    if (!validators.email(email)) {
+      setError(ERROR_MESSAGES.ORDER.INVALID_EMAIL);
+      return false;
+    }
+
+    if (cart.length === 0) {
+      setError(ERROR_MESSAGES.CART.EMPTY_CART);
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
 
-    if (!validateEmail(email)) {
-      setEmailError('Veuillez entrer une adresse email valide');
-      return;
-    }
+    setIsProcessing(true);
+    try {
+      // Préparation des items du panier
+      const cartItems = cart.map(item => ({
+        productId: item.product.id,
+        quantity: item.quantity
+      }));
 
-    if (cart.length === 0) {
-      setEmailError('Votre panier est vide');
-      return;
-    }
+      // Validation des stocks
+      const stocksValid = await validateCartStocks(cartItems);
+      if (!stocksValid) {
+        throw new Error(ERROR_MESSAGES.CART.STOCK_LIMIT);
+      }
 
-    const cartItems = cart.map(item => ({
-      productId: item.id,
-      quantity: item.quantity
-    }));
+      // Création de la commande
+      const orderResult = await createOrder({ 
+        email, 
+        items: cartItems,
+        total: calculateTotal()
+      });
 
-    const stocksValid = await validateCartStocks(cartItems);
-    if (!stocksValid) {
-      setEmailError('Certains produits ne sont plus disponibles en quantité suffisante');
-      return;
-    }
-
-    const success = await createOrder(email);
-    if (success) {
-      navigate('/order-confirmation');
+      if (orderResult.success) {
+        await clearCart();
+        navigate('/order-confirmation', { 
+          state: { orderId: orderResult.orderId }
+        });
+      }
+    } catch (err) {
+      setError(handleApiError(err));
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const loading = orderLoading || stockLoading;
+  const calculateTotal = () => {
+    return cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  };
 
   return (
     <div className="checkout-form-container">
-      <h2>Finaliser la commande</h2>
-      
-      {(orderError || emailError) && (
-        <div className="error-message">{orderError || emailError}</div>
-      )}
+      <div className="checkout-header">
+        <h2>Finaliser la commande</h2>
+        {onClose && (
+          <button onClick={onClose} className="close-button">
+            ×
+          </button>
+        )}
+      </div>
       
       <form onSubmit={handleSubmit} className="checkout-form">
         <div className="form-group">
@@ -66,13 +98,10 @@ const CheckoutForm: React.FC = () => {
             type="email"
             id="email"
             value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setEmailError('');
-            }}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="votre@email.com"
             required
-            disabled={loading}
+            disabled={isProcessing}
           />
         </div>
 
@@ -80,22 +109,26 @@ const CheckoutForm: React.FC = () => {
           <h3>Récapitulatif de la commande</h3>
           <ul>
             {cart.map(item => (
-              <li key={item.id}>
-                {item.name} x {item.quantity} = {(item.price * item.quantity).toFixed(2)}€
+              <li key={item.product.id} className="order-item">
+                <span className="item-name">{item.product.name}</span>
+                <span className="item-quantity">x {item.quantity}</span>
+                <span className="item-price">
+                  {(item.product.price * item.quantity).toFixed(2)}€
+                </span>
               </li>
             ))}
           </ul>
           <div className="total">
-            Total: {cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}€
+            <strong>Total:</strong> {calculateTotal().toFixed(2)}€
           </div>
         </div>
 
         <button 
           type="submit" 
-          disabled={loading || cart.length === 0}
+          disabled={isProcessing || cart.length === 0}
           className="submit-button"
         >
-          {loading ? 'Traitement...' : 'Confirmer la commande'}
+          {isProcessing ? 'Traitement...' : 'Confirmer la commande'}
         </button>
       </form>
     </div>

@@ -3,14 +3,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, CartItem } from '../types';
 
 interface CartContextType {
-    items: CartItem[];
-    addToCart: (product: Product, quantity: number) => void;
+    cart: CartItem[];
+    addToCart: (product: Product, quantity?: number) => Promise<boolean>;
+    updateQuantity: (productId: number, newQuantity: number) => Promise<boolean>;
     removeFromCart: (productId: number) => void;
-    updateQuantity: (productId: number, quantity: number) => void;
     clearCart: () => void;
+    stockError: string | null;
     total: number;
-}
-
+  }
+  
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

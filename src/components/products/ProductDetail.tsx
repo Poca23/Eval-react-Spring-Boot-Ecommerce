@@ -1,13 +1,14 @@
 // src/components/products/ProductDetail.tsx
 import { useParams } from 'react-router-dom';
-import { useProduct } from '../../hooks/useProducts';
+import { useProducts } from '../../hooks/useProducts';
 import { useCart } from '../../hooks/useCart';
-import './ProductDetail.css';
+import '../../../index.css';
 
 function ProductDetail() {
   const { id } = useParams<{ id: string }>();
-  const { product, loading, error } = useProduct(Number(id));
-  const { addToCart } = useCart();
+  const { products, loading, error } = useProducts();
+  const product = products.find(p => p.id === parseInt(id as string));
+   const { addToCart } = useCart();
 
   if (loading) {
     return <div className="product-detail-loading">Chargement...</div>;

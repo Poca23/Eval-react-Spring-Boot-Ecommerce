@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { CartItem as CartItemType } from '../../types';
 import { useStock } from '../../hooks/useStock';
+import { useError } from '../../contexts/ErrorContext';
+import { handleApiError } from '../../utils/errorHandler';
+import '../../../index.css';
 
 interface Props {
     item: CartItemType;
@@ -11,55 +14,65 @@ interface Props {
 
 const CartItem: React.FC<Props> = ({ item, onUpdateQuantity, onRemove }) => {
     const { checkProductStock, loading } = useStock();
+    const { setError } = useError();
     const [stockWarning, setStockWarning] = useState(false);
 
     useEffect(() => {
         const validateStock = async () => {
-            const isAvailable = await checkProductStock(item.product.id, item.quantity);
-            setStockWarning(!isAvailable);
+            try {
+                const isAvailable = await checkProductStock(item.product.id, item.quantity);
+                setStockWarning(!isAvailable);
+            } catch (err) {
+                setError(handleApiError(err));
+            }
         };
         validateStock();
-    }, [item.quantity, item.product.id, checkProductStock]);
+    }, [item.quantity, item.product.id, checkProductStock, setError]);
+
+    const handleQuantityChange = async (newQuantity: number) => {
+        try {
+            const isAvailable = await checkProductStock(item.product.id, newQuantity);
+            if (isAvailable && newQuantity <= item.product.stock) {
+                await onUpdateQuantity(item.product.id, newQuantity);
+            } else {
+                setError('Stock insuffisant pour la quantité demandée');
+            }
+        } catch (err) {
+            setError(handleApiError(err));
+        }
+    };
 
     return (
-        <div className="space-y-2">
-            <div className="flex items-center justify-between border p-4 rounded">
-                <div className="flex items-center space-x-4">
+        <div className="cart-item">
+            <div className="cart-item-content">
+                <div className="item-details">
                     <img 
                         src={item.product.imageUrl} 
                         alt={item.product.name}
-                        className="w-20 h-20 object-cover rounded"
+                        className="item-image"
                     />
-                    <div>
-                        <h3 className="font-semibold">{item.product.name}</h3>
-                        <p className="text-gray-600">{item.product.price} €</p>
-                        <p className="text-sm text-gray-500">
+                    <div className="item-info">
+                        <h3>{item.product.name}</h3>
+                        <p className="item-price">{item.product.price} €</p>
+                        <p className="stock-info">
                             Stock disponible: {item.product.stock}
                         </p>
                     </div>
                 </div>
                 
-                <div className="flex items-center space-x-4">
+                <div className="item-actions">
                     <input
                         type="number"
                         min="1"
                         max={item.product.stock}
                         value={item.quantity}
-                        onChange={async (e) => {
-                            const newQuantity = Number(e.target.value);
-                            const isAvailable = await checkProductStock(item.product.id, newQuantity);
-                            if (isAvailable && newQuantity <= item.product.stock) {
-                                onUpdateQuantity(item.product.id, newQuantity);
-                            }
-                        }}
-                        className={`w-20 border rounded px-2 py-1 ${
-                            stockWarning ? 'border-red-500' : ''
-                        }`}
+                        onChange={(e) => handleQuantityChange(Number(e.target.value))}
+                        className={`quantity-input ${stockWarning ? 'warning' : ''}`}
                         disabled={loading}
                     />
                     <button
                         onClick={() => onRemove(item.product.id)}
-                        className="text-red-500 hover:text-red-700"
+                        className="remove-button"
                         disabled={loading}
                     >
                         Supprimer
@@ -68,7 +81,7 @@ const CartItem: React.FC<Props> = ({ item, onUpdateQuantity, onRemove }) => {
             </div>
             
             {stockWarning && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
+                <div className="stock-warning">
                     Stock insuffisant pour la quantité demandée
                 </div>
             )}
