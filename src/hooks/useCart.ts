@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { Product, CartItem } from "../types";
 import { useStock } from "./useStock";
-import '../../styles/index.css';
+import '../styles/index.css';
 
 
 export function useCart() {

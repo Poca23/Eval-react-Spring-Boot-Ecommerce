@@ -46,7 +46,7 @@ const CartItem: React.FC<Props> = ({ item, onUpdateQuantity, onRemove }) => {
             <div className="cart-item-content">
                 <div className="item-details">
                     <img 
-                        src={item.product.imageUrl} 
+                        src={item.product.image_url} 
                         alt={item.product.name}
                         className="item-image"
                     />
@@ -68,6 +68,8 @@ const CartItem: React.FC<Props> = ({ item, onUpdateQuantity, onRemove }) => {
                         onChange={(e) => handleQuantityChange(Number(e.target.value))}
                         className={`quantity-input ${stockWarning ? 'warning' : ''}`}
                         disabled={loading}
+                        title="Quantité"
+                        placeholder="Entrez la quantité"
                     />
                     <button
                         onClick={() => onRemove(item.product.id)}

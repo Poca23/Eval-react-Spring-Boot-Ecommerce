@@ -1,5 +1,5 @@
 // src/utils/validators.ts
-import { OrderRequest, Product, CartItem } from "../types";
+import { OrderRequest, Product, CartItem, Order, OrderItem } from "../types";
 import { ERROR_MESSAGES } from "./errorMessages";
 
 export class ValidationError extends Error {
@@ -51,47 +51,85 @@ export const validators = {
     }
     validators.price(product.price);
     validators.stock(product.stock);
+    // Validation de l'URL de l'image
+    if (product.image_url && !validators.url(product.image_url)) {
+      throw new ValidationError(ERROR_MESSAGES.VALIDATION.INVALID_IMAGE_URL);
+    }
     return true;
   },
 
-  cartItem: (item: CartItem, availableStock: number): boolean => {
+  cartItem: (item: CartItem): boolean => {
     validators.product(item.product);
-    validators.quantity(item.quantity, availableStock);
+    validators.quantity(item.quantity, item.product.stock);
     return true;
   },
 
   orderRequest: (request: OrderRequest): boolean => {
-    validators.email(request.customerEmail);
+    validators.email(request.email);
 
-    if (!request.items.length) {
+    if (!request.items?.length) {
       throw new ValidationError(ERROR_MESSAGES.VALIDATION.EMPTY_ORDER);
     }
 
     request.items.forEach((item) => {
-      if (item.productId <= 0) {
+      if (item.product_id <= 0) {
         throw new ValidationError(ERROR_MESSAGES.VALIDATION.INVALID_PRODUCT_ID);
       }
       validators.quantity(item.quantity, Infinity);
-      validators.price(item.price);
     });
 
-    validators.price(request.totalAmount);
+    if (request.totalAmount !== undefined) {
+      validators.price(request.totalAmount);
+    }
+
+    return true;
+  },
+
+  order: (order: Order): boolean => {
+    validators.email(order.email);
+    // Validation du status
+    if (!["PENDING", "CONFIRMED", "CANCELLED"].includes(order.status)) {
+      throw new ValidationError(ERROR_MESSAGES.VALIDATION.INVALID_ORDER_STATUS);
+    }
+    // Validation de la date
+    if (!validators.date(order.date)) {
+      throw new ValidationError(ERROR_MESSAGES.VALIDATION.INVALID_DATE);
+    }
+    return true;
+  },
+
+  orderItem: (item: OrderItem): boolean => {
+    if (item.order_id <= 0) {
+      throw new ValidationError(ERROR_MESSAGES.VALIDATION.INVALID_ORDER_ID);
+    }
+    if (item.product_id <= 0) {
+      throw new ValidationError(ERROR_MESSAGES.VALIDATION.INVALID_PRODUCT_ID);
+    }
+    validators.quantity(item.quantity, Infinity);
     return true;
   },
 
   cart: (items: CartItem[]): boolean => {
-    items.forEach((item) => {
-      validators.cartItem(item, item.product.stock);
-    });
+    if (!items.length) {
+      throw new ValidationError(ERROR_MESSAGES.VALIDATION.EMPTY_CART);
+    }
+    items.forEach((item) => validators.cartItem(item));
     return true;
   },
 
-  totalAmount: (items: CartItem[]): boolean => {
-    const total = items.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
-      0
-    );
-    return validators.price(total);
+  // Nouvelles méthodes utilitaires
+  url: (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  date: (date: string): boolean => {
+    const timestamp = Date.parse(date);
+    return !isNaN(timestamp);
   },
 
   required: (value: string | number): boolean => {

@@ -1,40 +1,61 @@
 // src/components/products/ProductDetail.tsx
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useCart } from '../../hooks/useCart';
+import { useError } from '../../hooks/useError';
+import { Product, CartItem } from '../../types';
+import { ERROR_MESSAGES } from '../../utils/errorMessages';
 import '../../styles/index.css';
 
-function ProductDetail() {
+export const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { products, loading, error } = useProducts();
-  const product = products.find(p => p.id === parseInt(id as string));
-   const { addToCart } = useCart();
+  const { addToCart } = useCart();
+  const { handleError } = useError();
+
+  const product = products.find(p => p.id === parseInt(id || '0'));
 
   if (loading) {
     return <div className="product-detail-loading">Chargement...</div>;
   }
 
   if (error) {
-    return <div className="product-detail-error">{error}</div>;
+    return <div className="product-detail-error">
+      {ERROR_MESSAGES.PRODUCTS.FETCH_ERROR}
+    </div>;
   }
 
   if (!product) {
-    return <div className="product-detail-error">Produit non trouvé</div>;
+    return <div className="product-detail-error">
+      {ERROR_MESSAGES.PRODUCTS.NOT_FOUND}
+    </div>;
   }
 
-  const handleAddToCart = () => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1
-    });
+  const handleAddToCart = async () => {
+    try {
+      const cartItem: CartItem = {
+        product: product,
+        quantity: 1
+      };
+      
+      await addToCart(cartItem);
+    } catch (error) {
+      handleError(error, ERROR_MESSAGES.CART.ADD_ERROR);
+    }
   };
 
   return (
     <div className="product-detail">
       <div className="product-detail-image">
-        <img src={product.imageUrl} alt={product.name} />
+        <img 
+          src={product.image_url} 
+          alt={product.name}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = '/placeholder-image.jpg'; // Assurez-vous d'avoir une image par défaut
+          }}
+        />
       </div>
       <div className="product-detail-info">
         <h1>{product.name}</h1>
@@ -55,6 +76,6 @@ function ProductDetail() {
       </div>
     </div>
   );
-}
+};
 
 export default ProductDetail;

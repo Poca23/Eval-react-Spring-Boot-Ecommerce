@@ -1,7 +1,7 @@
 // src/hooks/useStock.ts
 import { useState, useCallback } from 'react';
 import { stockService } from '../services/stockService';
-import '../../styles/index.css';
+import '../styles/index.css';
 
 
 export function useStock() {

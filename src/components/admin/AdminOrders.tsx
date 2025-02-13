@@ -3,53 +3,51 @@ import React, { useState, useCallback } from 'react';
 import { useOrders } from '../../hooks/useOrders';
 import { useError } from '../../hooks/useError';
 import { formatDate, formatPrice } from '../../utils/formatters';
-import { validateEmail } from '../../utils/validators';
+import { validators } from '../../utils/validators';
 import { ERROR_MESSAGES } from '../../utils/errorMessages';
+import { Order, OrderItem } from '../../types';
 import '../../styles/index.css';
 
-interface OrderItemDisplay {
-  id: number;
-  product_id: number;
-  quantity: number;
+interface OrderItemDisplay extends OrderItem {
   name: string;
   price: number;
 }
 
-interface OrderDisplay {
-  id: number;
-  email: string;
-  date: string;
-  status: string;
+interface OrderDisplay extends Omit<Order, 'items'> {
   items: OrderItemDisplay[];
 }
 
 export const AdminOrders: React.FC = () => {
   const [searchEmail, setSearchEmail] = useState('');
-  const { setError, clearError } = useError();
+  const { handleError, clearError } = useError();
   const { orders, loading, error: ordersError, refreshOrders } = useOrders(searchEmail);
 
   const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
     clearError();
     
-    if (email && !validateEmail(email)) {
-      setError(ERROR_MESSAGES.VALIDATION.INVALID_EMAIL);
-      return;
+    try {
+      if (email) {
+        validators.email(email);
+      }
+      setSearchEmail(email);
+    } catch (error) {
+      handleError(error, ERROR_MESSAGES.VALIDATION.INVALID_EMAIL);
     }
-
-    setSearchEmail(email);
-  }, [setError, clearError]);
+  }, [handleError, clearError]);
 
   React.useEffect(() => {
     if (ordersError) {
-      setError(ordersError);
+      handleError(ordersError, ERROR_MESSAGES.ORDER.FETCH_ERROR);
     }
-  }, [ordersError, setError]);
+  }, [ordersError, handleError]);
 
-  // Fonction pour rafraîchir les commandes
   const handleRefresh = useCallback(() => {
-    refreshOrders();
-  }, [refreshOrders]);
+    clearError();
+    refreshOrders().catch(error => {
+      handleError(error, ERROR_MESSAGES.ORDER.FETCH_ERROR);
+    });
+  }, [refreshOrders, handleError, clearError]);
 
   return (
     <div className="admin-orders">
@@ -86,7 +84,7 @@ export const AdminOrders: React.FC = () => {
                 : "Aucune commande disponible"}
             </div>
           ) : (
-            orders.map((order) => (
+            orders.map((order: OrderDisplay) => (
               <div key={order.id} className="order-card">
                 <div className="order-header">
                   <div className="order-info">
@@ -112,7 +110,7 @@ export const AdminOrders: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {order.items.map((item) => (
+                      {order.items.map((item: OrderItemDisplay) => (
                         <tr key={item.id}>
                           <td>{item.name}</td>
                           <td>{item.quantity}</td>

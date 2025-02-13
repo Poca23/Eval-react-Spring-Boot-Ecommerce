@@ -12,8 +12,9 @@ export interface Product {
 export interface Order {
   id: number;
   email: string;
-  date: string;  // Pour le TIMESTAMP
+  date: string; // TIMESTAMP from DB
   status: string;
+  items?: OrderItem[]; // Optional pour les cas où on ne charge pas les items
 }
 
 export interface OrderItem {
@@ -21,6 +22,7 @@ export interface OrderItem {
   order_id: number;
   product_id: number;
   quantity: number;
+  product?: Product; // Optional pour les cas où on veut les détails du produit
 }
 
 export interface CartItem {
@@ -34,4 +36,10 @@ export interface OrderRequest {
     product_id: number;
     quantity: number;
   }[];
+  totalAmount?: number; // Optional, peut être calculé côté serveur
+}
+
+// Ajoutons aussi l'interface pour les props de OrderList
+export interface OrderListProps {
+  orders: Order[];
 }

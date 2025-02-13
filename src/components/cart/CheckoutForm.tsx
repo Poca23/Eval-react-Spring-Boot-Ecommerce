@@ -1,5 +1,5 @@
 // src/components/cart/CheckoutForm.tsx
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../../hooks/useOrders';
 import { useCart } from '../../hooks/useCart';
@@ -8,7 +8,6 @@ import { useError } from '../../contexts/ErrorContext';
 import { handleApiError } from '../../utils/errorHandler';
 import { validators } from '../../utils/validators';
 import { ERROR_MESSAGES } from '../../utils/errorMessages';
-import { formatPrice } from '../../utils/formatters';
 import '../../styles/index.css';
 
 interface CheckoutFormProps {
@@ -18,92 +17,67 @@ interface CheckoutFormProps {
 const CheckoutForm: React.FC<CheckoutFormProps> = ({ onClose }) => {
   const [email, setEmail] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
-  const { setError, clearError } = useError();
+  const { setError } = useError();
   const { createOrder } = useOrders();
-  const { cart, clearCart, getTotalAmount } = useCart();
+  const { cart, clearCart } = useCart();
   const { validateCartStocks } = useStock();
   const navigate = useNavigate();
 
-  const validateForm = useCallback(() => {
-    const errors: { [key: string]: string } = {};
-    
-    try {
-      validators.email(email);
-    } catch (e) {
-      errors.email = ERROR_MESSAGES.ORDER.INVALID_EMAIL;
+  const validateForm = () => {
+    if (!validators.email(email)) {
+      setError(ERROR_MESSAGES.ORDER.INVALID_EMAIL);
+      return false;
     }
 
     if (cart.length === 0) {
-      errors.cart = ERROR_MESSAGES.CART.EMPTY_CART;
+      setError(ERROR_MESSAGES.CART.EMPTY_CART);
+      return false;
     }
 
-    const total = getTotalAmount();
-    if (!validators.price(total)) {
-      errors.total = ERROR_MESSAGES.ORDER.INVALID_AMOUNT;
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  }, [email, cart, getTotalAmount]);
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    clearError();
-    setEmail(e.target.value);
-    if (validationErrors.email) {
-      const newErrors = { ...validationErrors };
-      delete newErrors.email;
-      setValidationErrors(newErrors);
-    }
+    return true;
   };
-
-  const prepareOrderItems = useCallback(() => {
-    return cart.map(item => ({
-      productId: item.product.id,
-      quantity: item.quantity,
-      price: item.product.price
-    }));
-  }, [cart]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
     
     if (!validateForm()) return;
 
     setIsProcessing(true);
     try {
-      const orderItems = prepareOrderItems();
-      
+      // Préparation des items du panier
+      const cartItems = cart.map(item => ({
+        productId: item.product.id,
+        quantity: item.quantity
+      }));
+
       // Validation des stocks
-      const stocksValid = await validateCartStocks(orderItems);
+      const stocksValid = await validateCartStocks(cartItems);
       if (!stocksValid) {
-        throw new Error(ERROR_MESSAGES.ORDER.STOCK_VALIDATION_ERROR);
+        throw new Error(ERROR_MESSAGES.CART.STOCK_LIMIT);
       }
 
       // Création de la commande
-      const orderResult = await createOrder({ 
-        customerEmail: email, 
-        items: orderItems,
-        totalAmount: getTotalAmount()
+      const orderResult: { success: boolean; orderId?: string } = await createOrder({ 
+        email, 
+        items: cartItems,
+        total: calculateTotal()
       });
 
-      if (orderResult.success) {
+      if (orderResult && orderResult.success) {
         await clearCart();
         navigate('/order-confirmation', { 
-          state: { 
-            orderId: orderResult.orderId,
-            email: email,
-            total: getTotalAmount()
-          }
+          state: { orderId: orderResult.orderId }
         });
       }
     } catch (err) {
-      const errorMessage = handleApiError(err);
-      setError(errorMessage);
+      setError(handleApiError(err));
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const calculateTotal = () => {
+    return cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   };
 
   return (
@@ -111,11 +85,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onClose }) => {
       <div className="checkout-header">
         <h2>Finaliser la commande</h2>
         {onClose && (
-          <button 
-            onClick={onClose} 
-            className="close-button"
-            aria-label="Fermer"
-          >
+          <button onClick={onClose} className="close-button">
             ×
           </button>
         )}
@@ -128,53 +98,37 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onClose }) => {
             type="email"
             id="email"
             value={email}
-            onChange={handleEmailChange}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="votre@email.com"
             required
             disabled={isProcessing}
-            className={validationErrors.email ? 'error' : ''}
-            aria-invalid={!!validationErrors.email}
           />
-          {validationErrors.email && (
-            <span className="error-message">{validationErrors.email}</span>
-          )}
         </div>
 
         <div className="order-summary">
           <h3>Récapitulatif de la commande</h3>
-          {cart.length === 0 ? (
-            <p className="empty-cart-message">{ERROR_MESSAGES.CART.EMPTY_CART}</p>
-          ) : (
-            <ul>
-              {cart.map(item => (
-                <li key={item.product.id} className="order-item">
-                  <span className="item-name">{item.product.name}</span>
-                  <span className="item-quantity">x {item.quantity}</span>
-                  <span className="item-price">
-                    {formatPrice(item.product.price * item.quantity)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+          <ul>
+            {cart.map(item => (
+              <li key={item.product.id} className="order-item">
+                <span className="item-name">{item.product.name}</span>
+                <span className="item-quantity">x {item.quantity}</span>
+                <span className="item-price">
+                  {(item.product.price * item.quantity).toFixed(2)}€
+                </span>
+              </li>
+            ))}
+          </ul>
           <div className="total">
-            <strong>Total:</strong> {formatPrice(getTotalAmount())}
+            <strong>Total:</strong> {calculateTotal().toFixed(2)}€
           </div>
         </div>
 
         <button 
           type="submit" 
           disabled={isProcessing || cart.length === 0}
-          className={`submit-button ${isProcessing ? 'processing' : ''}`}
+          className="submit-button"
         >
-          {isProcessing ? (
-            <>
-              <span className="spinner"></span>
-              Traitement en cours...
-            </>
-          ) : (
-            'Confirmer la commande'
-          )}
+          {isProcessing ? 'Traitement...' : 'Confirmer la commande'}
         </button>
       </form>
     </div>

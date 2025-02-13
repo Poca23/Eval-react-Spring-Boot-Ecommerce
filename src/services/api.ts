@@ -26,6 +26,7 @@ export interface OrderRequest {
 }
 
 export interface Order {
+  items: any;
   id: number;
   email: string;
   date: string;

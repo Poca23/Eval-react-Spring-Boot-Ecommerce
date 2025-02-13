@@ -53,6 +53,11 @@ export const ERROR_MESSAGES = {
     NUMBER_OUT_OF_RANGE: "La valeur est hors limites",
     INVALID_DATE: "Date invalide",
     INVALID_PHONE: "Numéro de téléphone invalide",
+    EMPTY_ORDER: "La commande ne peut pas être vide",
+    EMPTY_CART: "Le panier ne peut pas être vide",
+    INVALID_ORDER_STATUS: "Le statut de la commande n'est pas valide",
+    INVALID_ORDER_ID: "L'identifiant de la commande n'est pas valide",
+    INVALID_IMAGE_URL: "L'URL de l'image n'est pas valide"
   },
 
   API: {
