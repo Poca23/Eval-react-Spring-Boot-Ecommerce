@@ -2,7 +2,7 @@
 import { useParams } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useCart } from '../../hooks/useCart';
-import '../../../index.css';
+import '../../styles/index.css';
 
 function ProductDetail() {
   const { id } = useParams<{ id: string }>();

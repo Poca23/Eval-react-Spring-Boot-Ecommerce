@@ -1,6 +1,8 @@
 // src/components/common/Toast.tsx
 import React from 'react';
 import { useError } from '../../contexts/ErrorContext';
+import '../../styles/index.css';
+
 
 export const Toast: React.FC = () => {
   const { error, clearError } = useError();

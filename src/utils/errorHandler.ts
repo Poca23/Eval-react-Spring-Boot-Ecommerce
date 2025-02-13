@@ -1,5 +1,7 @@
 // src/utils/errorHandler.ts
 import { ERROR_MESSAGES } from "./errorMessages";
+import '../../styles/index.css';
+
 
 export const handleApiError = (error: unknown): string => {
   if (error instanceof Error) {

@@ -1,5 +1,7 @@
 // src/utils/validators.ts
 import { OrderRequest, Product, CartItem } from "../types";
+import '../../styles/index.css';
+
 
 export const validators = {
   email: (email: string): boolean => {

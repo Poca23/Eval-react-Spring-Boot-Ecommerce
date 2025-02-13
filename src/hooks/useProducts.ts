@@ -1,6 +1,8 @@
 // src/hooks/useProducts.ts
 import { useState, useEffect } from 'react';
 import { Product, api } from '../services/api';
+import '../../styles/index.css';
+
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);

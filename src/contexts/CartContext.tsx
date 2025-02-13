@@ -1,16 +1,18 @@
 // src/context/CartContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, CartItem } from '../types';
+import '../../styles/index.css';
+
 
 interface CartContextType {
-    cart: CartItem[];
+    items: CartItem[];
     addToCart: (product: Product, quantity?: number) => Promise<boolean>;
-    updateQuantity: (productId: number, newQuantity: number) => Promise<boolean>;
     removeFromCart: (productId: number) => void;
+    updateQuantity: (productId: number, newQuantity: number) => Promise<boolean>;
     clearCart: () => void;
-    stockError: string | null;
     total: number;
   }
+  
   
 const CartContext = createContext<CartContextType | undefined>(undefined);
 

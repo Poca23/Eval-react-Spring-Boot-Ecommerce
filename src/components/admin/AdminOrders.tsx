@@ -4,7 +4,7 @@ import { useOrders } from '../../hooks/useOrders';
 import { useError } from '../../contexts/ErrorContext';
 import { handleApiError } from '../../utils/errorHandler';
 import { ERROR_MESSAGES } from '../../utils/errorMessages';
-import '../../../index.css';
+import '../../styles/index.css';
 
 export const AdminOrders: React.FC = () => {
   const [searchEmail, setSearchEmail] = useState('');

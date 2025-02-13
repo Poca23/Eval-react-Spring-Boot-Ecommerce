@@ -1,7 +1,7 @@
 // src/components/products/ProductList.tsx
 import { useProducts } from '../../hooks/useProducts';
 import ProductCard from './ProductCard';
-import '../../../index.css';
+import '../../styles/index.css';
 
 function ProductList() {
   const { products, loading, error } = useProducts();

@@ -5,6 +5,8 @@ import { api } from "../services/api";
 import { useCart } from "./useCart";
 import { useProducts } from "./useProducts";
 import { CartItem } from "../types";
+import '../../styles/index.css';
+
 
 export function useOrders(emailFilter?: string) {
   const [orders, setOrders] = useState<Order[]>([]);

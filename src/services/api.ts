@@ -1,19 +1,16 @@
-// src/services/api.ts
-const API_BASE_URL = "http://localhost:8080/api";
-
-export interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  imageUrl: string;
-}
+import { API_URL } from "../config/api.config";
 
 export const api = {
+  getOrders: async (emailFilter?: string): Promise<Order[]> => {
+    const response = await fetch(
+      `${API_URL}/orders${emailFilter ? `?email=${emailFilter}` : ""}`
+    );
+    return response.json();
+  },
+
   // Ajout de la méthode pour récupérer un produit spécifique
   async getProduct(id: number): Promise<Product> {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`);
+    const response = await fetch(`${API_URL}/products/${id}`);
     if (!response.ok) {
       throw new Error("Product not found");
     }
@@ -21,7 +18,7 @@ export const api = {
   },
 
   async getAllProducts(): Promise<Product[]> {
-    const response = await fetch(`${API_BASE_URL}/products`);
+    const response = await fetch(`${API_URL}/products`);
     if (!response.ok) {
       throw new Error("Failed to fetch products");
     }

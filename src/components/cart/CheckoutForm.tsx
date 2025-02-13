@@ -8,7 +8,7 @@ import { useError } from '../../contexts/ErrorContext';
 import { handleApiError } from '../../utils/errorHandler';
 import { validators } from '../../utils/validators';
 import { ERROR_MESSAGES } from '../../utils/errorMessages';
-import '../../../index.css';
+import '../../styles/index.css';
 
 interface CheckoutFormProps {
   onClose?: () => void;

@@ -4,8 +4,7 @@ import { CartItem as CartItemType } from '../../types';
 import { useStock } from '../../hooks/useStock';
 import { useError } from '../../contexts/ErrorContext';
 import { handleApiError } from '../../utils/errorHandler';
-import '../../../index.css';
-
+import '../../styles/index.css'
 interface Props {
     item: CartItemType;
     onUpdateQuantity: (id: number, quantity: number) => void;

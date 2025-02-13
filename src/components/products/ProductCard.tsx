@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Product } from '../../types';
 import { useCart } from '../../hooks/useCart';
 import { useStock } from '../../hooks/useStock';
-import '../../../index.css';
+import '../../styles/index.css';
 
 interface ProductCardProps {
   product: Product;

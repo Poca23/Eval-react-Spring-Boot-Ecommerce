@@ -1,4 +1,6 @@
 // src/utils/errorMessages.ts
+import '../../styles/index.css';
+
 export const ERROR_MESSAGES = {
   PRODUCTS: {
     FETCH_ERROR: "Impossible de charger les produits",

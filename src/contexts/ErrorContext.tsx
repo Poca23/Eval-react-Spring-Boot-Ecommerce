@@ -1,5 +1,7 @@
 // src/contexts/ErrorContext.tsx
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import '../../styles/index.css';
+
 
 interface ErrorContextType {
   error: string | null;

@@ -7,7 +7,7 @@ import { handleApiError } from '../../utils/errorHandler';
 import CartItem from './CartItem';
 import CartSummary from './CartSummary';
 import CheckoutForm from './CheckoutForm';
-import '../../../index.css';
+import '../../styles/index.css';
 
 const Cart: React.FC = () => {
     const { cart, updateQuantity, removeFromCart, clearCart } = useCart();

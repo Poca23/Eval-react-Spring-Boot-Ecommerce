@@ -1,6 +1,7 @@
 // src/components/orders/OrderList.tsx
 import React from 'react';
 import { Order } from '../../types';
+import '../../styles/index.css';
 
 interface OrderListProps {
   orders: Order[];

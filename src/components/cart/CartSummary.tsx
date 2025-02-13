@@ -2,8 +2,7 @@
 import React from 'react';
 import { useError } from '../../contexts/ErrorContext';
 import { handleApiError } from '../../utils/errorHandler';
-import '../../../index.css';
-
+import '../../styles/index.css'
 interface Props {
     total: number;
     onClearCart: () => void;

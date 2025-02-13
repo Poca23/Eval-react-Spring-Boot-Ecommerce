@@ -1,5 +1,6 @@
 // src/components/orders/OrderSearch.tsx
 import React from 'react';
+import '../../styles/index.css';
 
 interface OrderSearchProps {
   onSearch: (query: string) => void;

@@ -1,5 +1,7 @@
 // src/hooks/useError.ts
 import { useState, useCallback } from "react";
+import '../../styles/index.css';
+
 
 export const useError = () => {
   const [error, setError] = useState<string | null>(null);

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useError } from '../../contexts/ErrorContext';
-import '../../../index.css';
+import '../../styles/index.css';
 
 const OrderConfirmation: React.FC = () => {
   const location = useLocation();
