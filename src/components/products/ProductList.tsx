@@ -1,32 +1,21 @@
-// src/components/products/ProductList.tsx
 import { useEffect } from 'react';
 import { useProducts } from '../../hooks/useProducts';
-import { useError } from '../../contexts/ErrorContext';
+import { useError } from '../../hooks/useError';
 import ProductCard from './ProductCard';
 import '../../styles/index.css';
 
-function ProductList() {
+const ProductList = () => {
   const { products, loading, error } = useProducts();
   const { setError } = useError();
 
   useEffect(() => {
-    if (loading) {
-      setError('Chargement des produits...', 'info');
-    } else if (error) {
-      setError(`Erreur lors du chargement des produits: ${error}`, 'error');
-    } else if (products.length === 0) {
-      setError('Aucun produit disponible', 'warning');
-    } else {
-      setError(null);
+    if (error) {
+      setError('Une erreur est survenue lors du chargement des produits', 'error');
     }
-  }, [loading, error, products.length, setError]);
+  }, [error, setError]);
 
   if (loading) {
     return <div className="products-loading">Chargement des produits...</div>;
-  }
-
-  if (error) {
-    return <div className="products-error">{error}</div>;
   }
 
   if (products.length === 0) {
@@ -43,6 +32,6 @@ function ProductList() {
       </div>
     </div>
   );
-}
+};
 
 export default ProductList;

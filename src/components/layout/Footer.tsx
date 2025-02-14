@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
     <footer className="bg-gray-100 mt-auto">
       <div className="container mx-auto px-4 py-6">
         <p className="text-center text-gray-600">
-          © 2023 E-commerce. All rights reserved.
+          © 2023 E-commerce. CND - All rights reserved.
         </p>
       </div>
     </footer>

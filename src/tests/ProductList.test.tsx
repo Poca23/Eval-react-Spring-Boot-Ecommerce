@@ -1,58 +1,79 @@
-// src/tests/ProductList.test.tsx
 import { render, screen, waitFor } from '@testing-library/react';
-import { ErrorProvider } from '../contexts/ErrorContext';
 import ProductList from '../components/products/ProductList';
-import { fetchProducts } from '../services/api';
+import { CartProvider } from '../contexts/CartContext';
+import { ErrorProvider } from '../contexts/ErrorContext';
+import { api } from '../services/api';
 
 // Mock du service API
-jest.mock('../services/api');
+jest.mock('../services/api', () => ({
+  api: {
+    getAllProducts: jest.fn()
+  }
+}));
 
 describe('ProductList Component', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   const mockProducts = [
     {
       id: 1,
       name: 'iPhone 24',
       price: 2999.99,
       stock: 50,
-      description: 'Description test',
-      image_url: 'test.jpg'
+      description: 'Test description',
+      image_url: 'test-url'
     }
   ];
 
-  beforeEach(() => {
-    // Reset des mocks
-    jest.clearAllMocks();
-  });
-
-  test('affiche le chargement puis les produits', async () => {
-    (fetchProducts as jest.Mock).mockResolvedValue(mockProducts);
+  it('affiche la liste des produits', async () => {
+    (api.getAllProducts as jest.Mock).mockResolvedValue(mockProducts);
 
     render(
       <ErrorProvider>
-        <ProductList />
+        <CartProvider>
+          <ProductList />
+        </CartProvider>
       </ErrorProvider>
     );
 
-    // Vérifie l'état de chargement
-    expect(screen.getByText(/chargement/i)).toBeInTheDocument();
+    expect(screen.getByText('Chargement des produits...')).toBeInTheDocument();
 
-    // Attend que les produits soient chargés
     await waitFor(() => {
       expect(screen.getByText('iPhone 24')).toBeInTheDocument();
     });
   });
 
-  test('gère les erreurs de chargement', async () => {
-    (fetchProducts as jest.Mock).mockRejectedValue(new Error('Erreur API'));
+  it('affiche un message quand aucun produit n\'est disponible', async () => {
+    (api.getAllProducts as jest.Mock).mockResolvedValue([]);
 
     render(
       <ErrorProvider>
-        <ProductList />
+        <CartProvider>
+          <ProductList />
+        </CartProvider>
       </ErrorProvider>
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/erreur/i)).toBeInTheDocument();
+      expect(screen.getByText('Aucun produit disponible')).toBeInTheDocument();
+    });
+  });
+
+  it('gère les erreurs de chargement', async () => {
+    (api.getAllProducts as jest.Mock).mockRejectedValue(new Error('Erreur de chargement'));
+
+    render(
+      <ErrorProvider>
+        <CartProvider>
+          <ProductList />
+        </CartProvider>
+      </ErrorProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Une erreur est survenue/)).toBeInTheDocument();
     });
   });
 });

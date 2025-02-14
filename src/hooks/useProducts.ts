@@ -1,13 +1,12 @@
+// src/hooks/useProducts.ts
 import { useState, useEffect } from "react";
 import { Product } from "../types";
 import { api } from "../services/api";
-import { useError } from "../contexts/ErrorContext";
 
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { handleError } = useError();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -17,14 +16,16 @@ export const useProducts = () => {
         setProducts(data);
         setError(null);
       } catch (err) {
-        handleError(err);
+        setError(
+          err instanceof Error ? err.message : "Une erreur est survenue"
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [handleError]);
+  }, []);
 
   return { products, loading, error };
 };
