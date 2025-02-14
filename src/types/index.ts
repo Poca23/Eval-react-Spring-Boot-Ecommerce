@@ -44,16 +44,27 @@ export interface OrderListProps {
   orders: Order[];
 }
 
-export interface OrderDisplay extends Omit<Order, 'items'> {
+export interface OrderDisplay extends Omit<Order, "items"> {
   items: OrderItemDisplay[];
 }
 
 export interface OrderItemDisplay extends OrderItem {
   name: string;
-  price: number;  
+  price: number;
 }
 
 export interface StockItem {
   product_id: number;
   quantity: number;
+}
+
+export type ErrorMessage = string | null;
+
+export type ErrorSeverity = "error" | "warning" | "success" | "info";
+
+export interface ErrorContextType {
+  error: ErrorMessage;
+  severity: ErrorSeverity;
+  setError: (message: ErrorMessage, severity?: ErrorSeverity) => void;
+  clearError: () => void;
 }

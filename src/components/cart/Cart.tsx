@@ -1,9 +1,8 @@
 // src/components/cart/Cart.tsx
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
 import { useError } from '../../contexts/ErrorContext';
-import { handleApiError } from '../../utils/errorHandler';
 import CartItem from './CartItem';
 import CartSummary from './CartSummary';
 import CheckoutForm from './CheckoutForm';
@@ -14,36 +13,71 @@ const Cart: React.FC = () => {
     const { setError } = useError();
     const navigate = useNavigate();
     const [showCheckout, setShowCheckout] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
+    // Calcul du total avec mémoization
     const total = React.useMemo(() => 
         cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
         [cart]
     );
+    
 
-    const handleUpdateQuantity = async (id: number, quantity: number) => {
+    // Gestionnaire de quantité
+    const handleUpdateQuantity = useCallback(async (id: number, quantity: number) => {
+        setIsProcessing(true);
         try {
+            if (quantity < 1) {
+                setError("La quantité doit être supérieure à 0", "warning");
+                return;
+            }
             await updateQuantity(id, quantity);
         } catch (err) {
-            setError(handleApiError(err));
+            setError(
+                err instanceof Error ? err.message : "Erreur lors de la mise à jour de la quantité",
+                "error"
+            );
+        } finally {
+            setIsProcessing(false);
         }
-    };
+    }, [updateQuantity, setError]);
 
-    const handleRemoveFromCart = async (id: number) => {
+    // Gestionnaire de suppression
+    const handleRemoveFromCart = useCallback(async (id: number) => {
+        setIsProcessing(true);
         try {
             await removeFromCart(id);
+            setError("Produit retiré du panier", "success");
         } catch (err) {
-            setError(handleApiError(err));
+            setError(
+                err instanceof Error ? err.message : "Erreur lors de la suppression du produit",
+                "error"
+            );
+        } finally {
+            setIsProcessing(false);
         }
-    };
+    }, [removeFromCart, setError]);
 
-    const handleClearCart = async () => {
+    // Gestionnaire de vidage du panier
+    const handleClearCart = useCallback(async () => {
+        if (!window.confirm("Êtes-vous sûr de vouloir vider votre panier ?")) {
+            return;
+        }
+        
+        setIsProcessing(true);
         try {
             await clearCart();
+            setError("Panier vidé avec succès", "success");
         } catch (err) {
-            setError(handleApiError(err));
+            setError(
+                err instanceof Error ? err.message : "Erreur lors du vidage du panier",
+                "error"
+            );
+        } finally {
+            setIsProcessing(false);
         }
-    };
+    }, [clearCart, setError]);
 
+    // Affichage du panier vide
     if (cart.length === 0) {
         return (
             <div className="empty-cart">
@@ -69,6 +103,7 @@ const Cart: React.FC = () => {
                         item={item}
                         onUpdateQuantity={handleUpdateQuantity}
                         onRemove={handleRemoveFromCart}
+                        disabled={isProcessing}
                     />
                 ))}
             </div>
@@ -77,10 +112,14 @@ const Cart: React.FC = () => {
                 total={total}
                 onClearCart={handleClearCart}
                 onCheckout={() => setShowCheckout(true)}
+                disabled={isProcessing}
             />
 
             {showCheckout && (
-                <CheckoutForm onClose={() => setShowCheckout(false)} />
+                <CheckoutForm 
+                    onClose={() => setShowCheckout(false)}
+                    disabled={isProcessing}
+                />
             )}
         </div>
     );

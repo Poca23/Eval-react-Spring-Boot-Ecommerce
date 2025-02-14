@@ -1,17 +1,27 @@
-// src/components/cart/CartItem.tsx
 import React, { useState, useEffect } from 'react';
 import { CartItem as CartItemType } from '../../types';
 import { useStock } from '../../hooks/useStock';
 import { useError } from '../../contexts/ErrorContext';
 import { handleApiError } from '../../utils/errorHandler';
 import '../../styles/index.css'
+
 interface Props {
-    item: CartItemType;
-    onUpdateQuantity: (id: number, quantity: number) => void;
-    onRemove: (id: number) => void;
+    item: {
+        product: {
+            id: number;
+            name: string;
+            price: number;
+            stock: number;
+            image_url: string;
+        };
+        quantity: number;
+    };
+    onUpdateQuantity: (id: number, quantity: number) => Promise<void>;
+    onRemove: (id: number) => Promise<void>;
+    disabled?: boolean;
 }
 
-const CartItem: React.FC<Props> = ({ item, onUpdateQuantity, onRemove }) => {
+const CartItem: React.FC<Props> = ({ item, onUpdateQuantity, onRemove, disabled }) => {
     const { checkProductStock, loading } = useStock();
     const { setError } = useError();
     const [stockWarning, setStockWarning] = useState(false);
@@ -67,14 +77,14 @@ const CartItem: React.FC<Props> = ({ item, onUpdateQuantity, onRemove }) => {
                         value={item.quantity}
                         onChange={(e) => handleQuantityChange(Number(e.target.value))}
                         className={`quantity-input ${stockWarning ? 'warning' : ''}`}
-                        disabled={loading}
+                        disabled={loading || disabled}
                         title="Quantité"
                         placeholder="Entrez la quantité"
                     />
                     <button
                         onClick={() => onRemove(item.product.id)}
                         className="remove-button"
-                        disabled={loading}
+                        disabled={loading || disabled}
                     >
                         Supprimer
                     </button>

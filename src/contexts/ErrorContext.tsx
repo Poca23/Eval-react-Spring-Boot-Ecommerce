@@ -1,38 +1,24 @@
 // src/contexts/ErrorContext.tsx
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import '../styles/index.css';
-
-interface ErrorContextType {
-  error: string | null;
-  setError: (message: string | null) => void;
-  clearError: () => void;
-  handleError: (error: unknown, fallbackMessage: string) => void;
-}
+import React, { createContext, useContext, useState } from 'react';
+import { ErrorContextType, ErrorMessage, ErrorSeverity } from '../types';
 
 const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
 
 export const ErrorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [error, setErrorState] = useState<string | null>(null);
+  const [error, setErrorMessage] = useState<ErrorMessage>(null);
+  const [severity, setSeverity] = useState<ErrorSeverity>('error');
 
-  const setError = useCallback((message: string | null) => {
-    setErrorState(message);
-    if (message) {
-      // Auto-clear après 5 secondes seulement si un message est défini
-      setTimeout(() => setErrorState(null), 5000);
-    }
-  }, []);
+  const setError = (message: ErrorMessage, newSeverity: ErrorSeverity = 'error') => {
+    setErrorMessage(message);
+    setSeverity(newSeverity);
+  };
 
-  const clearError = useCallback(() => {
-    setErrorState(null);
-  }, []);
-
-  const handleError = useCallback((error: unknown, fallbackMessage: string) => {
-    const errorMessage = error instanceof Error ? error.message : fallbackMessage;
-    setError(errorMessage);
-  }, [setError]);
+  const clearError = () => {
+    setErrorMessage(null);
+  };
 
   return (
-    <ErrorContext.Provider value={{ error, setError, clearError, handleError }}>
+    <ErrorContext.Provider value={{ error, severity, setError, clearError }}>
       {children}
     </ErrorContext.Provider>
   );
