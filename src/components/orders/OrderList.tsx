@@ -26,7 +26,7 @@ export const OrderList: React.FC<OrderListProps> = ({ orders }) => {
   };
 
   return (
-    <div className="order-list">
+    <div className="order-list" data-testid="order-list">
       {orders.map((order) => (
         <div key={order.id} className="order-item">
           <div className="order-header">
