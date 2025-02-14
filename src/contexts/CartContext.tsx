@@ -1,8 +1,9 @@
 // src/contexts/CartContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product, CartItem } from '../types';
+import { Product, CartItem, OrderConfirmation, ShippingAddress, PaymentDetails } from '../types';
 import { useError } from '../hooks/useError';
 import { validators } from '../utils/validators';
+import { api } from '../services/api';
 import '../styles/index.css';
 
 interface CartContextType {
@@ -14,6 +15,9 @@ interface CartContextType {
   total: number;
   getTotal: () => number;
   getItemCount: () => number;
+  confirmOrder: (shippingAddress: ShippingAddress, paymentDetails: PaymentDetails) => Promise<boolean>;
+  isProcessingOrder: boolean;
+  orderConfirmed: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -24,6 +28,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return savedCart ? JSON.parse(savedCart) : [];
   });
   const [total, setTotal] = useState<number>(0);
+  const [isProcessingOrder, setIsProcessingOrder] = useState(false);
+  const [orderConfirmed, setOrderConfirmed] = useState(false);
   const { handleError } = useError();
 
   useEffect(() => {
@@ -121,6 +127,33 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const confirmOrder = async (
+    shippingAddress: ShippingAddress,
+    paymentDetails: PaymentDetails
+  ): Promise<boolean> => {
+    try {
+      setIsProcessingOrder(true);
+      
+      const orderData: OrderConfirmation = {
+        cartItems: items,
+        shippingAddress,
+        paymentDetails,
+        userId: 'user-id'
+      };
+
+      await api.confirmOrder(orderData);
+      
+      setOrderConfirmed(true);
+      await clearCart();
+      return true;
+    } catch (error) {
+      handleError(error, "Erreur lors de la confirmation de la commande");
+      return false;
+    } finally {
+      setIsProcessingOrder(false);
+    }
+  };
+
   return (
     <CartContext.Provider value={{
       items,
@@ -130,7 +163,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearCart,
       total,
       getTotal,
-      getItemCount
+      getItemCount,
+      confirmOrder,
+      isProcessingOrder,
+      orderConfirmed
     }}>
       {children}
     </CartContext.Provider>

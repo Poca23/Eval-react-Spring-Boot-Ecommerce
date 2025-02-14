@@ -66,7 +66,23 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onClose }) => {
           product_id: item.product.id,
           quantity: item.quantity
         })),
-        totalAmount: total
+        totalAmount: total,
+        shippingAddress: {
+          fullName: '',  // À remplir avec les données du formulaire
+          street: '',
+          city: '',
+          postalCode: '',
+          country: '',
+          phone: '',
+          email: email
+        },
+        paymentDetails: {
+          method: 'card', // À adapter selon le mode de paiement choisi
+          cardNumber: '',
+          cardHolder: '',
+          expiryDate: '',
+          cvv: ''
+        }
       };
 
       // Vérification des stocks

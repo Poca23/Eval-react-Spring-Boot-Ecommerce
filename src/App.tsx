@@ -8,29 +8,66 @@ import { CartProvider } from './contexts/CartContext';
 import OrderConfirmation from './components/cart/OrderConfirmation';
 import AdminOrders from './components/admin/AdminOrders';
 import { ErrorProvider } from './contexts/ErrorContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { Toast } from './components/common/Toast';
-
+import LoginForm from './components/auth/LoginForm';
+import PrivateRoute from './components/auth/PrivateRoute';
 
 function App() {
   return (
     <ErrorProvider>
-      <Toast />
-    <Router>
-      <CartProvider>
-        <Layout>
-          <Routes>
-            <Route path="/admin/orders" element={<AdminOrders />} />
-            <Route path="/" element={<ProductList />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/products/:id" element={<ProductDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/admin/orders" element={<OrderList orders={[]} />} />
-            <Route path="/order-confirmation" element={<OrderConfirmation />} />
-          </Routes>
-        </Layout>
-      </CartProvider>
-    </Router>
-    <Toast />
+      <AuthProvider>
+        <Router>
+          <CartProvider>
+            <Layout>
+              <Toast />
+              <Routes>
+                {/* Routes publiques */}
+                <Route path="/" element={<ProductList />} />
+                <Route path="/products" element={<ProductList />} />
+                <Route path="/products/:id" element={<ProductDetail />} />
+                <Route path="/login" element={<LoginForm />} />
+
+                {/* Routes protégées utilisateur */}
+                <Route
+                  path="/cart"
+                  element={
+                    <PrivateRoute>
+                      <Cart />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/order-confirmation"
+                  element={
+                    <PrivateRoute>
+                      <OrderConfirmation />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/orders"
+                  element={
+                    <PrivateRoute>
+                      <OrderList orders={[]} />
+                    </PrivateRoute>
+                  }
+                />
+
+                {/* Routes protégées admin */}
+                <Route
+                  path="/admin/orders"
+                  element={
+                    <PrivateRoute requireAdmin>
+                      <AdminOrders />
+                    </PrivateRoute>
+                  }
+                />
+              </Routes>
+            </Layout>
+          </CartProvider>
+        </Router>
+      </AuthProvider>
     </ErrorProvider>
   );
 }

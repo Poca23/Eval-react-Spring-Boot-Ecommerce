@@ -948,3 +948,62 @@ product-card-image img.hidden {
   padding: 20px;
   color: #666;
 }
+
+.order-list {
+  padding: 20px;
+}
+
+.order-item {
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+}
+.status-processing {
+  background-color: #cce5ff;
+}
+.status-completed {
+  background-color: #d4edda;
+}
+.status-cancelled {
+  background-color: #f8d7da;
+}
+
+.order-details {
+  margin-top: 10px;
+}
+
+.items-list {
+  margin: 10px 0;
+}
+
+.order-item-detail {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.shipping-details {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}

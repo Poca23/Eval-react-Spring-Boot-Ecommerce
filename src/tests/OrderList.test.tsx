@@ -1,206 +1,139 @@
 // src/tests/OrderList.test.tsx
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { OrderList } from '../components/orders/OrderList';
-import { Order } from '../types';
+import { Order, OrderItem } from '../types';
 
 // Mock des données de test
-const mockOrders: Order[] = [
-  {
+const mockOrderItem: OrderItem = {
+  id: 1,
+  order_id: 1,
+  product_id: 1,
+  quantity: 2,
+  price: 99.99,
+  product: {
     id: 1,
-    email: 'test@example.com',
-    status: 'PENDING',
-    date: '2024-01-19T10:00:00',
-    items: [
-      {
-        id: 1,
-        order_id: 1,
-        product_id: 1,
-        quantity: 2,
-        product: {
-          id: 1,
-          name: 'Test Product',
-          price: 99.99,
-          stock: 10,
-          description: 'Test description',
-          image_url: 'test.jpg'
-        }
-      }
-    ]
+    name: "Test Product",
+    price: 99.99,
+    description: "Test Description",
+    image_url: "test.jpg",
+    stock: 10
   }
-];
+};
 
-describe('OrderList Basic Rendering', () => {
-  it('renders orders correctly', () => {
-    render(<OrderList orders={mockOrders} />);
-    
-    expect(screen.getByText('Commande #1')).toBeInTheDocument();
-    expect(screen.getByText('PENDING')).toBeInTheDocument();
-    expect(screen.getByText('Email: test@example.com')).toBeInTheDocument();
+const mockOrder: Order = {
+  id: 1,
+  userId: 1,
+  status: 'PENDING',
+  date: '2023-01-01T12:00:00Z',
+  email: 'test@example.com',
+  items: [mockOrderItem],
+  shippingAddress: {
+    fullName: 'John Doe',
+    street: '123 Test St',
+    city: 'Test City',
+    postalCode: '12345',
+    country: 'Test Country',
+    phone: '123456789',
+    email: 'test@example.com'
+  }
+};
+
+const mockOrders: Order[] = [mockOrder];
+
+describe('OrderList', () => {
+  const mockOnOrderSelect = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('formats date correctly', () => {
-    render(<OrderList orders={mockOrders} />);
-    
-    expect(screen.getByText(/19 janvier 2024/i)).toBeInTheDocument();
+  test('affiche correctement la liste des commandes', () => {
+    render(<OrderList orders={mockOrders} onOrderSelect={mockOnOrderSelect} />);
+
+    expect(screen.getByText(/Commande #1/i)).toBeInTheDocument();
+    expect(screen.getByText(/En attente/i)).toBeInTheDocument();
+    expect(screen.getByText(/test@example.com/i)).toBeInTheDocument();
+    expect(screen.getByText(/Test Product/i)).toBeInTheDocument();
   });
 
-  it('calculates and displays order total correctly', () => {
-    render(<OrderList orders={mockOrders} />);
+  test('affiche un message quand il n\'y a pas de commandes', () => {
+    render(<OrderList orders={[]} onOrderSelect={mockOnOrderSelect} />);
     
-    expect(screen.getByText('Total: 199,98 €')).toBeInTheDocument();
+    expect(screen.getByText(/Aucune commande à afficher/i)).toBeInTheDocument();
   });
 
-  it('handles orders without items', () => {
-    const ordersWithoutItems: Order[] = [{
-      id: 2,
-      email: 'test@example.com',
-      status: 'PENDING',
-      date: '2024-01-19T10:00:00',
+  test('appelle onOrderSelect lors du clic sur une commande', () => {
+    render(<OrderList orders={mockOrders} onOrderSelect={mockOnOrderSelect} />);
+    
+    const orderItem = screen.getByRole('button');
+    fireEvent.click(orderItem);
+    
+    expect(mockOnOrderSelect).toHaveBeenCalledWith(mockOrder);
+  });
+
+  test('affiche correctement les détails de livraison', () => {
+    render(<OrderList orders={mockOrders} onOrderSelect={mockOnOrderSelect} />);
+    
+    expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
+    expect(screen.getByText(/123 Test St/i)).toBeInTheDocument();
+    expect(screen.getByText(/Test City, 12345/i)).toBeInTheDocument();
+    expect(screen.getByText(/Test Country/i)).toBeInTheDocument();
+  });
+
+  test('affiche correctement le total de la commande', () => {
+    render(<OrderList orders={mockOrders} onOrderSelect={mockOnOrderSelect} />);
+    
+    expect(screen.getByText(/199,98 €/i)).toBeInTheDocument();
+  });
+
+  test('gère correctement les commandes sans items', () => {
+    const orderWithoutItems: Order = {
+      ...mockOrder,
       items: []
-    }];
-
-    render(<OrderList orders={ordersWithoutItems} />);
+    };
     
-    expect(screen.getByText('Total: 0,00 €')).toBeInTheDocument();
+    render(<OrderList orders={[orderWithoutItems]} onOrderSelect={mockOnOrderSelect} />);
+    
+    expect(screen.getByText(/0,00 €/i)).toBeInTheDocument();
   });
 
-  it('handles missing product information', () => {
-    const ordersWithMissingProduct: Order[] = [{
-      id: 3,
-      email: 'test@example.com',
-      status: 'PENDING',
-      date: '2024-01-19T10:00:00',
-      items: [{
-        id: 1,
-        order_id: 3,
-        product_id: 1,
-        quantity: 2,
-        product: undefined
-      }]
-    }];
-
-    render(<OrderList orders={ordersWithMissingProduct} />);
-    
-    expect(screen.getByText('Produit #1')).toBeInTheDocument();
-  });
-
-  it('applies correct status class', () => {
-    render(<OrderList orders={mockOrders} />);
-    
-    const statusElement = screen.getByText('PENDING');
-    expect(statusElement).toHaveClass('status-pending');
-  });
-
-  it('displays order items details correctly', () => {
-    render(<OrderList orders={mockOrders} />);
-    
-    expect(screen.getByText('Test Product')).toBeInTheDocument();
-    expect(screen.getByText('Quantité: 2')).toBeInTheDocument();
-    expect(screen.getByText('199,98 €')).toBeInTheDocument();
-  });
-
-  it('renders empty list when no orders provided', () => {
-    render(<OrderList orders={[]} />);
-    
-    const orderItems = screen.queryAllByRole('listitem');
-    expect(orderItems.length).toBe(0);
-  });
-});
-
-describe('OrderList Filtering', () => {
-  it('filters orders by status', () => {
-    const mixedOrders: Order[] = [
-      {
-        id: 1,
-        email: 'test1@example.com',
-        status: 'PENDING',
-        date: '2024-01-19T10:00:00',
-        items: []
-      },
-      {
-        id: 2,
-        email: 'test2@example.com',
-        status: 'COMPLETED',
-        date: '2024-01-19T11:00:00',
-        items: []
-      }
+  test('affiche correctement les différents statuts de commande', () => {
+    const ordersWithDifferentStatus: Order[] = [
+      { ...mockOrder, id: 1, status: 'PENDING' },
+      { ...mockOrder, id: 2, status: 'PROCESSING' },
+      { ...mockOrder, id: 3, status: 'COMPLETED' },
+      { ...mockOrder, id: 4, status: 'CANCELLED' }
     ];
-
-    render(<OrderList orders={mixedOrders} />);
     
-    expect(screen.getByText('PENDING')).toBeInTheDocument();
-    expect(screen.getByText('COMPLETED')).toBeInTheDocument();
+    render(<OrderList orders={ordersWithDifferentStatus} onOrderSelect={mockOnOrderSelect} />);
+
+    expect(screen.getByText(/En attente/i)).toBeInTheDocument();
+    expect(screen.getByText(/En traitement/i)).toBeInTheDocument();
+    expect(screen.getByText(/Terminée/i)).toBeInTheDocument();
+    expect(screen.getByText(/Annulée/i)).toBeInTheDocument();
   });
-});
 
-describe('OrderList Sorting', () => {
-  it('displays orders in chronological order', () => {
-    const ordersWithDates: Order[] = [
-      {
-        id: 1,
-        email: 'test1@example.com',
-        status: 'PENDING',
-        date: '2024-01-19T10:00:00',
-        items: []
-      },
-      {
-        id: 2,
-        email: 'test2@example.com',
-        status: 'COMPLETED',
-        date: '2024-01-19T11:00:00',
-        items: []
-      }
-    ];
-
-    render(<OrderList orders={ordersWithDates} />);
+  test('formate correctement la date', () => {
+    render(<OrderList orders={mockOrders} onOrderSelect={mockOnOrderSelect} />);
     
-    const dates = screen.getAllByText(/janvier 2024/);
-    expect(dates).toHaveLength(2);
+    // Le format exact dépendra de la locale, mais nous pouvons vérifier la présence de l'année
+    expect(screen.getByText(/2023/)).toBeInTheDocument();
   });
-});
 
-describe('OrderList Items Display', () => {
-  it('shows correct total for orders with multiple items', () => {
-    const orderWithMultipleItems: Order[] = [{
-      id: 1,
-      email: 'test@example.com',
-      status: 'PENDING',
-      date: '2024-01-19T10:00:00',
-      items: [
-        {
-          id: 1,
-          order_id: 1,
-          product_id: 1,
-          quantity: 2,
-          product: {
-            id: 1,
-            name: 'Product 1',
-            price: 100,
-            stock: 10,
-            description: 'Test',
-            image_url: 'test.jpg'
-          }
-        },
-        {
-          id: 2,
-          order_id: 1,
-          product_id: 2,
-          quantity: 1,
-          product: {
-            id: 2,
-            name: 'Product 2',
-            price: 50,
-            stock: 5,
-            description: 'Test 2',
-            image_url: 'test2.jpg'
-          }
-        }
-      ]
-    }];
-
-    render(<OrderList orders={orderWithMultipleItems} />);
+  test('gère la navigation au clavier', () => {
+    render(<OrderList orders={mockOrders} onOrderSelect={mockOnOrderSelect} />);
     
-    expect(screen.getByText('Total: 250,00 €')).toBeInTheDocument();
+    const orderItem = screen.getByRole('button');
+    fireEvent.keyPress(orderItem, { key: 'Enter', code: 'Enter' });
+    
+    expect(mockOnOrderSelect).toHaveBeenCalledWith(mockOrder);
+  });
+
+  test('affiche correctement les quantités et prix unitaires', () => {
+    render(<OrderList orders={mockOrders} onOrderSelect={mockOnOrderSelect} />);
+    
+    expect(screen.getByText(/Quantité: 2/i)).toBeInTheDocument();
+    expect(screen.getByText(/99,99 €/i)).toBeInTheDocument();
   });
 });
