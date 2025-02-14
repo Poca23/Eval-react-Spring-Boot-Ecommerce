@@ -19,7 +19,6 @@ function App() {
       <CartProvider>
         <Layout>
           <Routes>
-            
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/" element={<ProductList />} />
             <Route path="/products" element={<ProductList />} />
