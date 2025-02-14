@@ -1,18 +1,18 @@
 import { useEffect } from 'react';
 import { useProducts } from '../../hooks/useProducts';
-import { useError } from '../../hooks/useError';
+import { useError } from '../../contexts/ErrorContext';
 import ProductCard from './ProductCard';
 import '../../styles/index.css';
 
 const ProductList = () => {
-  const { products, loading, error } = useProducts();
-  const { setError } = useError();
+  const { products, loading, error: productError } = useProducts();
+  const { handleError } = useError();
 
   useEffect(() => {
-    if (error) {
-      setError('Une erreur est survenue lors du chargement des produits', 'error');
+    if (productError) {
+      handleError(productError, 'Une erreur est survenue lors du chargement des produits');
     }
-  }, [error, setError]);
+  }, [productError, handleError]);
 
   if (loading) {
     return <div className="products-loading">Chargement des produits...</div>;
