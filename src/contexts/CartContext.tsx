@@ -1,7 +1,7 @@
 // src/contexts/CartContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, CartItem } from '../types';
-import { useError } from './ErrorContext';
+import { useError } from '../hooks/useError';
 import { validators } from '../utils/validators';
 import '../styles/index.css';
 
@@ -12,6 +12,8 @@ interface CartContextType {
   updateQuantity: (productId: number, newQuantity: number) => Promise<boolean>;
   clearCart: () => Promise<boolean>;
   total: number;
+  getTotal: () => number;
+  getItemCount: () => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -26,13 +28,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items));
-    calculateTotal();
+    const newTotal = getTotal();
+    setTotal(newTotal);
   }, [items]);
 
-  const calculateTotal = () => {
-    const newTotal = items.reduce((sum, item) => 
-      sum + (item.product.price * item.quantity), 0);
-    setTotal(newTotal);
+  const getTotal = () => {
+    return items.reduce((sum, item) => 
+      sum + (item.product.price * item.quantity), 0
+    );
+  };
+
+  const getItemCount = () => {
+    return items.reduce((sum, item) => sum + item.quantity, 0);
   };
 
   const addToCart = async (product: Product, quantity: number = 1): Promise<boolean> => {
@@ -121,7 +128,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       removeFromCart,
       updateQuantity,
       clearCart,
-      total
+      total,
+      getTotal,
+      getItemCount
     }}>
       {children}
     </CartContext.Provider>
