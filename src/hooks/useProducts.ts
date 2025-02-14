@@ -1,13 +1,13 @@
-// src/hooks/useProducts.ts
 import { useState, useEffect } from "react";
-import { Product } from "../services/api";
+import { Product } from "../types";
 import { api } from "../services/api";
-import { stockService } from "../services/stockService";
+import { useError } from "../contexts/ErrorContext";
 
-export function useProducts() {
+export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { handleError } = useError();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -17,25 +17,14 @@ export function useProducts() {
         setProducts(data);
         setError(null);
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Erreur lors du chargement des produits"
-        );
+        handleError(err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [handleError]);
 
-  const checkStock = async (
-    productId: number,
-    quantity: number
-  ): Promise<boolean> => {
-    return await stockService.checkStock(productId, quantity);
-  };
-
-  return { products, loading, error, checkStock };
-}
+  return { products, loading, error };
+};

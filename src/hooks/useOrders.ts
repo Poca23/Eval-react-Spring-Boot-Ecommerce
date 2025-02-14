@@ -5,6 +5,7 @@ import { api } from "../services/api";
 import { useCart } from "./useCart";
 import { stockService } from "../services/stockService";
 import { CartItem } from "../types";
+import { useError } from "../contexts/ErrorContext";
 
 type OrderWithSuccess = Order & { success: boolean };
 
@@ -13,6 +14,7 @@ export function useOrders(emailFilter?: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { cart, clearCart } = useCart();
+  const { handleError } = useError();
 
   const fetchOrders = useCallback(async () => {
     if (emailFilter === undefined) return;
@@ -23,11 +25,11 @@ export function useOrders(emailFilter?: string) {
       setOrders(fetchedOrders);
       setError(null);
     } catch (err) {
-      setError("Erreur lors du chargement des commandes");
+      handleError(err, "Erreur lors du chargement des commandes");
     } finally {
       setLoading(false);
     }
-  }, [emailFilter]);
+  }, [emailFilter, handleError]);
 
   useEffect(() => {
     fetchOrders();
@@ -64,23 +66,19 @@ export function useOrders(emailFilter?: string) {
         const createdOrder = await api.createOrder(orderData);
         clearCart();
         await fetchOrders();
-        
+
         return {
           ...createdOrder,
-          success: true
+          success: true,
         };
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Erreur lors de la création de la commande"
-        );
+        handleError(err, "Erreur lors de la création de la commande");
         return null;
       } finally {
         setLoading(false);
       }
     },
-    [cart, clearCart, fetchOrders, validateStocks]
+    [cart, clearCart, fetchOrders, validateStocks, handleError]
   );
 
   return {

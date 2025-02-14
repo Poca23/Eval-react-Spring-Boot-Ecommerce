@@ -1,4 +1,3 @@
-// src/services/stockService.ts
 import { api } from "./api";
 
 interface StockItem {
@@ -7,9 +6,6 @@ interface StockItem {
 }
 
 export const stockService = {
-  /**
-   * Vérifie si un produit a suffisamment de stock
-   */
   checkStock: async (
     product_id: number,
     quantity: number
@@ -22,9 +18,6 @@ export const stockService = {
     }
   },
 
-  /**
-   * Met à jour le stock d'un produit
-   */
   updateStock: async (
     product_id: number,
     newStock: number
@@ -38,9 +31,6 @@ export const stockService = {
     }
   },
 
-  /**
-   * Vérifie les stocks pour plusieurs produits en même temps
-   */
   checkMultipleStocks: async (items: StockItem[]): Promise<boolean> => {
     try {
       for (const item of items) {

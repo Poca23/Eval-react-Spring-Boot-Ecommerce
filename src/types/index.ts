@@ -67,4 +67,5 @@ export interface ErrorContextType {
   severity: ErrorSeverity;
   setError: (message: ErrorMessage, severity?: ErrorSeverity) => void;
   clearError: () => void;
+  handleError: (error: unknown, defaultMessage?: string) => void;
 }
