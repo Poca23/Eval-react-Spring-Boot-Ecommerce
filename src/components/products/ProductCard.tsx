@@ -1,45 +1,47 @@
-// src/components/products/ProductCard.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../../types';
-import { useCart } from '../../hooks/useCart';
-import { useStock } from '../../hooks/useStock';
-import '../../styles/index.css';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addToCart } = useCart();
-  const { checkProductStock, loading } = useStock();
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation(); // Empêche la propagation vers le Link parent
-    
-    try {
-      const isAvailable = await checkProductStock(product.id, 1);
-      if (isAvailable) {
-        addToCart(product);
-      }
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout au panier:', error);
-    }
+  // Image de fallback en cas d'erreur
+  const fallbackImage = 'https://images.unsplash.com/photo-1581591524425-c7e0978865fc';
+
+  const handleImageError = () => {
+    console.error(`Erreur de chargement de l'image pour ${product.name}:`, {
+      url: product.image_url,
+      product: product
+    });
+    setImageError(true);
+    setImageLoading(false);
   };
 
-  const fallbackImage = '/path/to/fallback-image.jpg'; // Image par défaut si l'URL est invalide
+  console.log('Rendering ProductCard for:', product.name, 'with image:', product.image_url);
 
   return (
     <div className="product-card">
       <Link to={`/products/${product.id}`}>
         <div className="product-card-image">
+          {imageLoading && (
+            <div className="image-skeleton">
+              Chargement...
+            </div>
+          )}
           <img 
-            src={product.image_url || fallbackImage} 
-            alt={product.name}
-            onError={(e) => {
-              e.currentTarget.src = fallbackImage;
+            src={imageError ? fallbackImage : product.image_url}
+            alt={`${product.name}`}
+            onError={handleImageError}
+            onLoad={() => {
+              console.log(`Image loaded successfully for ${product.name}`);
+              setImageLoading(false);
             }}
+            style={{ display: imageLoading ? 'none' : 'block' }}
           />
         </div>
         <div className="product-card-content">
@@ -49,7 +51,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </p>
           <div className="product-card-footer">
             <span className="product-card-price">
-              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(product.price)}
+              {new Intl.NumberFormat('fr-FR', { 
+                style: 'currency', 
+                currency: 'EUR' 
+              }).format(product.price)}
             </span>
           </div>
           <div className="product-stock">
@@ -57,14 +62,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         </div>
       </Link>
-      <button 
-        onClick={handleAddToCart}
-        disabled={loading || product.stock === 0}
-        className={`add-to-cart-button ${product.stock === 0 ? 'disabled' : ''}`}
-        aria-label={`Ajouter ${product.name} au panier`}
-      >
-        {loading ? 'Chargement...' : product.stock === 0 ? 'Indisponible' : 'Ajouter au panier'}
-      </button>
     </div>
   );
 };
