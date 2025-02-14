@@ -14,7 +14,7 @@ const mockOrders: Order[] = [
     items: [
       {
         id: 1,
-        order_id: 1, // Ajout de order_id manquant
+        order_id: 1,
         product_id: 1,
         quantity: 2,
         product: {
@@ -30,7 +30,7 @@ const mockOrders: Order[] = [
   }
 ];
 
-describe('OrderList', () => {
+describe('OrderList Basic Rendering', () => {
   it('renders orders correctly', () => {
     render(<OrderList orders={mockOrders} />);
     
@@ -73,10 +73,10 @@ describe('OrderList', () => {
       date: '2024-01-19T10:00:00',
       items: [{
         id: 1,
-        order_id: 3, // Ajout de order_id
+        order_id: 3,
         product_id: 1,
         quantity: 2,
-        product: undefined // Changement de null à undefined
+        product: undefined
       }]
     }];
 
@@ -103,8 +103,104 @@ describe('OrderList', () => {
   it('renders empty list when no orders provided', () => {
     render(<OrderList orders={[]} />);
     
-    // Correction de getByClassName en utilisant un sélecteur CSS valide
     const orderItems = screen.queryAllByRole('listitem');
     expect(orderItems.length).toBe(0);
+  });
+});
+
+describe('OrderList Filtering', () => {
+  it('filters orders by status', () => {
+    const mixedOrders: Order[] = [
+      {
+        id: 1,
+        email: 'test1@example.com',
+        status: 'PENDING',
+        date: '2024-01-19T10:00:00',
+        items: []
+      },
+      {
+        id: 2,
+        email: 'test2@example.com',
+        status: 'COMPLETED',
+        date: '2024-01-19T11:00:00',
+        items: []
+      }
+    ];
+
+    render(<OrderList orders={mixedOrders} />);
+    
+    expect(screen.getByText('PENDING')).toBeInTheDocument();
+    expect(screen.getByText('COMPLETED')).toBeInTheDocument();
+  });
+});
+
+describe('OrderList Sorting', () => {
+  it('displays orders in chronological order', () => {
+    const ordersWithDates: Order[] = [
+      {
+        id: 1,
+        email: 'test1@example.com',
+        status: 'PENDING',
+        date: '2024-01-19T10:00:00',
+        items: []
+      },
+      {
+        id: 2,
+        email: 'test2@example.com',
+        status: 'COMPLETED',
+        date: '2024-01-19T11:00:00',
+        items: []
+      }
+    ];
+
+    render(<OrderList orders={ordersWithDates} />);
+    
+    const dates = screen.getAllByText(/janvier 2024/);
+    expect(dates).toHaveLength(2);
+  });
+});
+
+describe('OrderList Items Display', () => {
+  it('shows correct total for orders with multiple items', () => {
+    const orderWithMultipleItems: Order[] = [{
+      id: 1,
+      email: 'test@example.com',
+      status: 'PENDING',
+      date: '2024-01-19T10:00:00',
+      items: [
+        {
+          id: 1,
+          order_id: 1,
+          product_id: 1,
+          quantity: 2,
+          product: {
+            id: 1,
+            name: 'Product 1',
+            price: 100,
+            stock: 10,
+            description: 'Test',
+            image_url: 'test.jpg'
+          }
+        },
+        {
+          id: 2,
+          order_id: 1,
+          product_id: 2,
+          quantity: 1,
+          product: {
+            id: 2,
+            name: 'Product 2',
+            price: 50,
+            stock: 5,
+            description: 'Test 2',
+            image_url: 'test2.jpg'
+          }
+        }
+      ]
+    }];
+
+    render(<OrderList orders={orderWithMultipleItems} />);
+    
+    expect(screen.getByText('Total: 250,00 €')).toBeInTheDocument();
   });
 });
